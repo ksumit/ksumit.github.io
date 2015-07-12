@@ -1,0 +1,65 @@
+body{
+  font-size: 13px;
+  font-family: verdana;
+  width: 95%;
+  margin-left: 2.5%;
+  margin-right: 2.5%;
+  padding-top: 10px;
+}
+strong{
+  font-size: 12px;
+}
+ul{
+}
+ul li {
+}
+ol{
+}
+ol li {
+  list-style: disc;
+}
+ol li p {
+  margin: 2px 0px;
+  padding: 0px;
+  font-size: 12.3px;
+  font-weight: bold;
+}
+ol li blockquote {
+  font-weight: normal;
+}
+br {
+  margin: 1px 0;
+}
+blockquote{
+  margin: 0px;
+}
+dl{
+  margin: 0px;
+}
+dt{
+  font-weight: bold;
+}
+
+h1 {
+	BORDER-TOP: #cccc99 1px solid;
+	PADDING-LEFT: 5px;
+	FONT-WEIGHT: bold;
+	FONT-SIZE: 15px;
+	COLOR: #0f0060;
+	BORDER-BOTTOM: #0f0060 1px solid;
+	FONT-FAMILY: arial-black
+}
+
+a {
+	text-decoration: none;
+	font-weight: bold;
+	font-family: arial-black;
+	color: #00008B;
+}
+#last-updated {
+	border-top: 1px dotted;
+	margin: 0;
+	text-align: right;
+	font-size: smaller;
+	font-style: italic;
+}

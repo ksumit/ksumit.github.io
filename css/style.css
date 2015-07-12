@@ -1,0 +1,156 @@
+body {
+	background-color: #FFFFFF;
+	font-family: verdana;
+	font-size: 14px;
+}
+
+h1, h2, h3, h4 {
+	margin: 0;
+	padding: 0;
+}
+
+#header {
+	font-family: verdana;
+	font-weight: bold;
+	margin: 1% 5.5%;
+}
+#header h1{
+	font-size: 19pt;
+	color: #000099;
+}
+
+#header .title{
+	font-size: 19pt;
+	color: #000099;
+}
+
+#header .subtitle {
+	font-size: 13px;
+	color: #000000;
+}
+
+#header h2 {
+	font-size: 13px;
+	color: #000000;
+}
+
+#header img {
+	float:right;
+	/*height:80px;
+	width:57px;*/
+	/*2height:117px;
+	width:100px;*/
+	height:126px;
+	width:100px;
+	border:1px solid #000099;
+	margin: -4.5% 0%;
+}
+.spacer {
+	margin: 3% 0;
+}
+
+#content {
+	font-family: verdana;
+	font-size: 14px;
+	margin: 0% 5.5%;
+}
+
+#content .title{
+	font-family: Arial Black;
+	font-size: 16px;
+}
+
+#content h1{
+	font-family: Arial Black;
+	font-size: 16px;
+}
+#content h2{
+	font-size: 14px;
+}
+#content h3{
+	font-size: 12px;
+}
+#content h4{
+	font-size: 10px;
+}
+
+.ruler-top {
+	border-top: 1px solid #000000;
+	margin: 0% 5%;
+}
+
+.ruler-bottom {
+	border-bottom: 1px solid #000000;
+	margin: 0% 5%;
+}
+#last-updated {
+	border: 0px;
+	margin: 0% 5%;
+	text-align: right;
+	font-size: smaller;
+	font-style: italic;
+}
+table#linkmenu {
+	font-family: arial-black;
+	font-weight: bold;
+	margin: 0 5.5%;
+	width: 89%;
+}
+
+table#linkmenu td{
+	text-align:center;
+	color: #00008B;
+	font-size: 14px;
+	padding: 3px 20px;
+}
+
+table#linkmenu .title {
+	border-bottom:1px solid blue;
+	border-top:1px solid darkblue;
+	font-size: 14px;
+	padding: 3px 7px 3px 3px;
+	text-align: left;
+}
+
+a {
+	text-decoration: none;
+	font-weight: bold;
+	font-family: arial-black;
+	color: #00008B;
+}
+
+a:hover {
+	text-decoration: underline;
+	font-weight: normal;
+	font-family: arial-black;
+	color: #00008B;
+}
+
+#webtrails {
+	font-weight: bold;
+}
+
+#webtrails a img {
+	border: medium none;
+	width: 16px;
+	height: 16px;
+	padding: 0 1px;
+}
+
+.disclaimer {
+	color: red;
+	font-weight: bold;
+	font-size: 8px;
+	text-align: center;
+}
+
+td.event-date{
+	font-weight: bold;
+	font-size: 12px;
+	width: 120px;
+}
+
+td.event-text{
+	color: blue;
+	font-size: 13px;
+}

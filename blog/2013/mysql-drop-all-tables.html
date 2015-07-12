@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head profile="http://www.w3.org/2005/10/profile">
+   <meta charset="utf-8"/>
+    <title>MySQL: drop all tables</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personal website of Sumit Kumar IIT Kharagpur">
+    <meta name="author" content="Sumit Kumar">
+    <meta name="keywords" content="Sumit Kumar, IIT Kharagpur, Maths, Computing, Software, BigData, Resume, Website">
+
+    <link rel="icon" 
+      type="image/jpeg" 
+      href="/img/ep.jpg" />
+    <link type="text/css" href="../..//css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="ruler-top"></div>
+<div id="header">
+<h1>Sumit Kumar</h1>
+<h2>Int. Masters <small>(Dual Degree in Maths &amp; Computing)</small>, IIT Kharagpur</h2>
+</div>
+<p class="spacer"></p>
+<div id="content">
+
+
+	<p><em>21 September 2013</em></p>
+
+	<p><pre name="code" class="mysql">
+mysql -Nse 'show tables' -u <user> -h <host> <dbname>| while read table; do mysql -e "drop table $table"  -u <user> -h <host> <dbname>; done
+</pre></p>
+
+	<hr />

@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>JBake</title>
+    <link>http://www.sumitkumar.in</link>
+    <atom:link href="http://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
+    <description>JBake Bootstrap Template</description>
+    <language>en-US</language>
+    <pubDate>Sat, 11 Jul 2015 22:16:52 -0700</pubDate>
+    <lastBuildDate>Sat, 11 Jul 2015 22:16:52 -0700</lastBuildDate>
+
+    
+    <item>
+      <title>MySQL: drop all tables</title>
+      <link>http://www.sumitkumar.in/blog/2013/mysql-drop-all-tables.html</link>
+      <pubDate>Sat, 21 Sep 2013 00:00:00 -0700</pubDate>
+      <guid isPermaLink="false">blog/2013/mysql-drop-all-tables.html</guid>
+      <description>
+      &lt;pre name=&quot;code&quot; class=&quot;mysql&quot;&gt;
+mysql -Nse &apos;show tables&apos; -u &lt;user&gt; -h &lt;host&gt; &lt;dbname&gt;| while read table; do mysql -e &quot;drop table $table&quot;  -u &lt;user&gt; -h &lt;host&gt; &lt;dbname&gt;; done
+&lt;/pre&gt;
+	  </description>
+    </item>
+    
+    <item>
+      <title>Eclipse plugins</title>
+      <link>http://www.sumitkumar.in/blog/2013/eclipse-plugins.html</link>
+      <pubDate>Wed, 21 Aug 2013 00:00:00 -0700</pubDate>
+      <guid isPermaLink="false">blog/2013/eclipse-plugins.html</guid>
+      <description>
+      &lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;http://code.google.com/p/pathtools/&quot;&gt;PathTools&lt;/a&gt;: Provides contextual menu for console, explorer etc&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.ne.jp/asahi/zigen/home/plugin/dbviewer/about_en.html&quot;&gt;DBViewer&lt;/a&gt;: Manage your db instances right from eclipse&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://marian.schedenig.name/projects/grep-console&quot;&gt;Grep Console&lt;/a&gt;: Filter what you want to see in the console&lt;/li&gt;
+&lt;/ol&gt;
+	  </description>
+    </item>
+    
+    <item>
+      <title>Firefox plugins</title>
+      <link>http://www.sumitkumar.in/blog/2013/firefox-plugins.html</link>
+      <pubDate>Wed, 21 Aug 2013 00:00:00 -0700</pubDate>
+      <guid isPermaLink="false">blog/2013/firefox-plugins.html</guid>
+      <description>
+      &lt;ol&gt;
+  &lt;li&gt;WebDeveloper (download &lt;a href=&quot;https://addons.mozilla.org/en-US/firefox/addon/web-developer/&quot;&gt;here&lt;/a&gt;)&lt;/li&gt;
+  &lt;li&gt;FoxyProxy (download &lt;a href=&quot;http://getfoxyproxy.org/downloads.html&quot;&gt;here&lt;/a&gt;)&lt;/li&gt;
+  &lt;li&gt;LiveHttpHeaders (download &lt;a href=&quot;http://livehttpheaders.mozdev.org/&quot;&gt;here&lt;/a&gt;)&lt;/li&gt;
+  &lt;li&gt;AdBlockPlus (download &lt;a href=&quot;http://adblockplus.org/en/installation&quot;&gt;here&lt;/a&gt;)&lt;/li&gt;
+  &lt;li&gt;Delicious - (download &lt;a href=&quot;http://delicious.com/help/installff&quot;&gt;here&lt;/a&gt;)&lt;/li&gt;
+  &lt;li&gt;Smush!t - (download &lt;a href=&quot;http://developer.yahoo.com/yslow/smushit/&quot;&gt;here&lt;/a&gt;)&lt;/li&gt;
+  &lt;li&gt;FoxyTunes - (download &lt;a href=&quot;http://www.foxytunes.com/firefox/allversions.html&quot;&gt;here&lt;/a&gt;)&lt;/li&gt;
+  &lt;li&gt;FireBug - (download &lt;a href=&quot;http://getfirebug.com/&quot;&gt;here&lt;/a&gt;)&lt;/li&gt;
+  &lt;li&gt;YSlow - (download &lt;a href=&quot;http://developer.yahoo.com/yslow/&quot;&gt;here&lt;/a&gt;)&lt;/li&gt;
+  &lt;li&gt;JsonView - (download &lt;a href=&quot;http://code.google.com/p/jsonview/&quot;&gt;here&lt;/a&gt;)&lt;/li&gt;
+&lt;/ol&gt;
+	  </description>
+    </item>
+    
+    <item>
+      <title>Thunderbird plugins</title>
+      <link>http://www.sumitkumar.in/blog/2013/thunderbird-plugins.html</link>
+      <pubDate>Wed, 21 Aug 2013 00:00:00 -0700</pubDate>
+      <guid isPermaLink="false">blog/2013/thunderbird-plugins.html</guid>
+      <description>
+      &lt;ol&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/protz/GMail-Conversation-View&quot;&gt;Thunderbird Conversations&lt;/a&gt;: Bring GMail conversation view to your inbox&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://tn123.org/mintrayr/&quot;&gt;MinimizeToTray Revived&lt;/a&gt;: Minimize thunderbird to system tray&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://lookout.mozdev.org/&quot;&gt;LookOut&lt;/a&gt;: Support for M$ OLE data (calendar format, winmail.dat attachments etc)&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://addons.mozilla.org/thunderbird/addon/4631&quot;&gt;Provider for Google Calendar&lt;/a&gt;: Support for Google calendar&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://www.mozilla.org/projects/calendar/lightning&quot;&gt;Lightning&lt;/a&gt;: Support for calendar out of thunderbird&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;http://clarkbw.net/blog/2009/11/23/google-calendar-in-thunderbird-tabs&quot;&gt;Google calendar tab&lt;/a&gt;: Google calendar as a tab in thunderbird&lt;/li&gt;
+&lt;/ol&gt;
+	  </description>
+    </item>
+    
+
+  </channel> 
+</rss>

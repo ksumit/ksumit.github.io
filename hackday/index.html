@@ -1,0 +1,125 @@
+<html>
+<head>
+<title>PxHelper @ Y! Open Hack India 2011</title>
+<style type="text/css">
+a {
+	text-decoration: none;
+}
+
+#notice {
+	color: red;
+	font-weight: lighter;
+}
+
+#placeholder {
+	
+}
+</style>
+<link href="http://www.sumitkumar.in/hackday/widget.css"
+	rel="stylesheet" type="text/css">
+</head>
+<body>
+<h1>PxHelper</h1>
+<div id="placeholder"></div>
+<h4><a href="mailto:jvs.vijaykumar[at]gmail.com">Vijay
+Jandhyala</a> and <a href="mailto:skbrnwl-dev[at]yahoo.com">Sumit Kumar</a></h4>
+<h3>What do visitors do when websites misbehave?
+<h3>
+<h3>How to help a visitor do "his thing" on your portal if he is
+lost?</h3>
+
+<p>PxHelper helps your users do "their thing" even before they
+explicitly ask. With predictive components and analytical models, this
+can increase engagement of your users to your portal and convert a
+visitor to a customer bringing more businesses to you.</p>
+
+<p id="notice">We made this hack purely in JS using JSON based
+configurations inspired by <a href="http://www.crockford.com">Doug</a>'s
+presentation on "JSON Saga"; introducing server side calculations and
+real time profiling of the user can achieve even complex user targeting. 
+PxHelper was selected in top 50 hacks out of 177 submitted entries.</p>
+
+<h2>Potential scenarios:</h2>
+<ul>
+	<li>Helping via chat or phone when your website has given up</li>
+	<li>Helping the visitor do "his thing" on his own if he is lost</li>
+	<li>Cross sell, upsell when a visitor seems to be a potential
+	target customer</li>
+</ul>
+
+<h2>For testing this hack:</h2>
+<ul>
+	<li>Install greasemonkey plugin: <a
+		href="https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/"
+		target="_blank">here</a></li>
+	<li>Right click and save: <a href="cleartrip-greasemonkey.js">greasemonkey
+	script</a></li>
+	<li>Add this greasemonkey script and hit cleartrip.com/flights</li>
+	<li>Search for flight between (Bangalore to Mysore) or (Bangalore
+	to Patna) or (Bangalore to Hubli) or (Bangalore to Shimla) or anything
+	else</li>
+	<li>If no flights are found, the widget will show up and ask if
+	you would like to book a train ticket instead.</li>
+	<li>Clicking on the "book a train ticket" link will take you to
+	train search page with context details already taken care of</li>
+	<li>If no trains are found, it will show up chat and call options</li>
+</ul>
+<script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost
+            + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script> <script type="text/javascript">
+    try {
+        var pageTracker = _gat._getTracker("UA-540223-5");
+        pageTracker._trackPageview();
+    } catch (err) {
+    }
+</script> <script type="text/javascript"
+	src="http://www.sumitkumar.in/js/prototype.js"></script> <script
+	type="text/javascript" src="http://www.sumitkumar.in/hackday/widget.js"></script>
+
+<script type="text/javascript">
+    var config = {};
+    config.text = "This idea featured a very small subset of <a target='blank' href='http://www.247customer.com/wowpx?ref=pxhelper'>WOW!Px</a>, a product offering from <a target='blank' href='http://www.247ilabs.com?ref=pxhelper'>24/7 iLabs</a>. Click on the links below to know more about";
+    config.options = [];
+    config.options.push( {
+        "id" : "wowpx",
+        "href" : "javascript:window.open('http://www.247customer.com/wowpx?ref=pxhelper');history.go(0);",
+        "text" : "WOW!Px",
+        "push" : true
+    });
+    config.options.push( {
+        "id" : "ilabs",
+        "href" : "javascript:window.open('http://www.247ilabs.com?ref=pxhelper');history.go(0);",
+        "text" : "iLabs (Innovation Labs)",
+        "push" : true
+    });
+    config.options.push( {
+        "id" : "customer247",
+        "href" : "javascript:window.open('http://www.247customer.com?ref=pxhelper');history.go(0);",
+        "text" : "24/7 Customer",
+        "push" : true
+    });
+    config.links = [];
+    config.links.push( {
+        "id" : "youtube-img",
+        "href" : "http://www.youtube.com/embed/i0n4Dr1B3N4",
+        "img" : "http://www.sumitkumar.in/hackday/images/youtube.png"
+    });
+    config.links
+            .push( {
+                "id" : "chat-img",
+                "href" : "https://admin.instantservice.com/Customer?ai=7442&di=<FOO>&optionaldata1=PxHelper&optionaldata2=InterestedToKnowAboutWOW!PxAndILabs",
+                "img" : "http://www.sumitkumar.in/hackday/images/spechbubble.png"
+            });
+    config.links.push( {
+        "id" : "call-img",
+        "href" : "skype:+16503850572?call",
+        "img" : "http://www.sumitkumar.in/hackday/images/telephone.png"
+    });
+    Event.observe(window, "load", function(evt) {
+        new PxHelper.PPWidget($("placeholder"), config);
+    });
+</script>
+</body>
+</html>
