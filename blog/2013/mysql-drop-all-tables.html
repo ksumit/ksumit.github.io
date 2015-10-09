@@ -12,6 +12,7 @@
       type="image/jpeg" 
       href="/img/ep.jpg" />
     <link type="text/css" href="../..//css/style.css" rel="stylesheet">
+    <link type="text/css" href="../..//highlighter/all.css" rel="stylesheet">
 </head>
 <body>
 
@@ -24,10 +25,65 @@
 <div id="content">
 
 
-	<p><em>21 September 2013</em></p>
+	<h1>MySQL: drop all tables</h1>
+	
+<h3>
+ <a href="/tags/mysql.html">mysql</a>
+ , <a href="/tags/code.html">code</a>
+ 
+</h3>
 
-	<p><pre name="code" class="mysql">
-mysql -Nse 'show tables' -u <user> -h <host> <dbname>| while read table; do mysql -e "drop table $table"  -u <user> -h <host> <dbname>; done
+
+
+
+
+	<p><pre name="code" class="brush:sql">
+mysql -Nse 'show tables' -u &lt;user&gt; -h &lt;host&gt; &lt;dbname&gt;| while read table; do \
+mysql -e "drop table $table" -u &lt;user&gt; -h &lt;host&gt; &lt;dbname&gt;; 
+done
 </pre></p>
+</div>
+<table id="linkmenu" align="center" bgcolor="#ffffff" cellpadding="5"
+	cellspacing="1">
+	<tr>
+		<td class="title">Links</td>
 
-	<hr />
+<td><a  href="/achievements.html">Awards & recognitions</a></td>
+
+<td><a target="_blank" href="/resume.html">Resume</a></td>
+
+<td><a  href="/personal.html">Personal</a></td>
+
+<td><a  href="/technical.html">Technical</a></td>
+
+<td><a  href="/misc.html">Miscellaneous</a></td>
+
+<td><a href="/blog/index.html">My Blog</a></td>
+
+	</tr>
+</table>
+
+
+<div class="ruler-bottom">&nbsp;</div>
+
+<div id="last-updated">Last Updated: Sep 21 2013</em></div>
+
+<script type="text/javascript" src="/highlighter/all.js">
+</script>
+<script type="text/javascript">
+     SyntaxHighlighter.all()
+</script>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-540223-5");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+</body>
+</html>
+

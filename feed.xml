@@ -6,8 +6,8 @@
     <atom:link href="http://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-US</language>
-    <pubDate>Sat, 11 Jul 2015 22:16:52 -0700</pubDate>
-    <lastBuildDate>Sat, 11 Jul 2015 22:16:52 -0700</lastBuildDate>
+    <pubDate>Fri, 9 Oct 2015 15:39:52 -0700</pubDate>
+    <lastBuildDate>Fri, 9 Oct 2015 15:39:52 -0700</lastBuildDate>
 
     
     <item>
@@ -16,8 +16,10 @@
       <pubDate>Sat, 21 Sep 2013 00:00:00 -0700</pubDate>
       <guid isPermaLink="false">blog/2013/mysql-drop-all-tables.html</guid>
       <description>
-      &lt;pre name=&quot;code&quot; class=&quot;mysql&quot;&gt;
-mysql -Nse &apos;show tables&apos; -u &lt;user&gt; -h &lt;host&gt; &lt;dbname&gt;| while read table; do mysql -e &quot;drop table $table&quot;  -u &lt;user&gt; -h &lt;host&gt; &lt;dbname&gt;; done
+      &lt;pre name=&quot;code&quot; class=&quot;brush:sql&quot;&gt;
+mysql -Nse &apos;show tables&apos; -u &amp;lt;user&amp;gt; -h &amp;lt;host&amp;gt; &amp;lt;dbname&amp;gt;| while read table; do \
+mysql -e &quot;drop table $table&quot; -u &amp;lt;user&amp;gt; -h &amp;lt;host&amp;gt; &amp;lt;dbname&amp;gt;; 
+done
 &lt;/pre&gt;
 	  </description>
     </item>
