@@ -6,9 +6,125 @@
     <atom:link href="http://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-US</language>
-    <pubDate>Fri, 9 Oct 2015 15:39:52 -0700</pubDate>
-    <lastBuildDate>Fri, 9 Oct 2015 15:39:52 -0700</lastBuildDate>
+    <pubDate>Mon, 14 Mar 2016 21:56:21 -0700</pubDate>
+    <lastBuildDate>Mon, 14 Mar 2016 21:56:21 -0700</lastBuildDate>
 
+    
+    <item>
+      <title>Git: quick tips</title>
+      <link>http://www.sumitkumar.in/blog/2015/git_tips.html</link>
+      <pubDate>Mon, 9 Nov 2015 00:00:00 -0800</pubDate>
+      <guid isPermaLink="false">blog/2015/git_tips.html</guid>
+      <description>
+      &lt;p&gt;&lt;strong&gt;Handy commands&lt;/strong&gt;&lt;br/&gt;&lt;ul&gt;&lt;br/&gt;&lt;li&gt;Change a commit message (only if it has not been pushed to upstream)&lt;/li&gt;&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;&lt;br/&gt;$ git commit --amend -m &quot;&amp;lt;NEW_COMMIT_MESSAGE&amp;gt;&quot;&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;li&gt;Merge multiple changes from a separate branch &quot;branch-x&quot; into current branch&lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git merge --squash branch-x
+&lt;/pre&gt;
+&lt;li&gt;Pull changes from remote without creating &quot;pseudo change&quot; commits and rebase local changes on top of remote state&lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git pull --rebase
+&lt;/pre&gt;
+&lt;li&gt;Merge and/or squash multiple changes (N number of commits) in current branch&lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git rebase -i HEAD~N
+&lt;/pre&gt;
+&lt;li&gt;Push local branch to a different branch&lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git push origin branch-x-v2:branch-x-v2-sumit
+Total 0 (delta 0), reused 0 (delta 0)
+To ssh://git.server.com/pkg/MyPackage
+ * [new branch]      branch-x-v2 -&gt; branch-x-v2-sumit
+&lt;/pre&gt;
+&lt;li&gt;Rename a remote branch without changing local branches &lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git push origin origin/branch-x-v2:refs/heads/branch-x-v2-old :branch-x-v2
+Total 0 (delta 0), reused 0 (delta 0)
+To ssh://git.server.com/pkg/MyPackage
+ - [deleted]         branch-x-v1
+ * [new branch]      origin/branch-x-v2 -&gt; branch-x-v2-old
+&lt;/pre&gt;&lt;p&gt;&lt;/ul&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Git Stash&lt;/strong&gt;&lt;br/&gt;&lt;ul&gt;&lt;br/&gt;&lt;li&gt;Push uncommitted changes to stash &lt;/li&gt;&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;&lt;br/&gt;$ git stash save &quot;message&quot;&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;li&gt;See list of stashes&lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git stash list
+stash@{0}: On branch-x: foo bar 1
+stash@{1}: On branch-x: foo bar
+&lt;/pre&gt;
+&lt;li&gt;See changes in a particular stash&lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git stash show -p stash@{0}
+diff --git a/build.xml b/build.xml
+index 6ce3fdf..15669ac 100644
+--- a/build.xml
++++ b/build.xml
+@@ -2,7 +2,6 @@
+ 
+....
+....
+&lt;/pre&gt;
+&lt;li&gt;Remove a single stash from the list and apply to current state&lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git stash pop stash@{1}
+On branch branch-x
+Your branch is up-to-date with &apos;origin/branch-x&apos;.
+Changes not staged for commit:
+  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)
+  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)
+ 
+        modified:   build.xml
+ 
+Untracked files:
+  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+ 
+        ....
+ 
+no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)
+Dropped stash@{1} (caceeb6392c7a40dd8325f3a2fdf038342e629cf)
+&lt;/pre&gt;
+&lt;li&gt;Apply a single stash without removing it from the list &lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git stash apply stash@{0}
+On branch branch-x
+Your branch is up-to-date with &apos;origin/branch-x&apos;.
+Changes not staged for commit:
+  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)
+  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)
+ 
+        modified:   build.xml
+ 
+Untracked files:
+  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+.....
+no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)
+&lt;/pre&gt;
+&lt;li&gt;Create a branch out of a stash &lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git stash branch my-branch stash@{0}
+&lt;/pre&gt;
+&lt;li&gt;Drop a stash&lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git stash drop stash@{0}   
+Dropped stash@{0} (f697125c22addf9cf31e8ac36b384857110fec0e)
+&lt;/pre&gt;
+&lt;li&gt;Clear all stash&lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git stash clear
+&lt;/pre&gt;&lt;p&gt;&lt;/ul&gt;&lt;/p&gt;
+	  </description>
+    </item>
+    
+    <item>
+      <title>Python: pretty print json</title>
+      <link>http://www.sumitkumar.in/blog/2015/pretty-print-json-shell.html</link>
+      <pubDate>Mon, 9 Nov 2015 00:00:00 -0800</pubDate>
+      <guid isPermaLink="false">blog/2015/pretty-print-json-shell.html</guid>
+      <description>
+      &lt;p&gt;Original source: &lt;a href=&quot;http://stackoverflow.com/questions/352098/how-can-i-pretty-print-json&quot;&gt;http://stackoverflow.com/questions/352098/how-can-i-pretty-print-json&lt;/a&gt;&lt;/p&gt;&lt;p&gt;With Python 2.6+&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:python&quot;&gt;&lt;br/&gt;echo &apos;{&quot;foo&quot;: &quot;lorem&quot;, &quot;bar&quot;: &quot;ipsum&quot;}&apos; | python -m json.tool&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Or if the json data is in file:&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:python&quot;&gt;&lt;br/&gt;cat &amp;lt;data_file&amp;gt; | python -m json.tool&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;&lt;p&gt;Handly shell alias:&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+alias prettyjson=&apos;python -m json.tool&apos;
+&lt;/pre&gt;
+	  </description>
+    </item>
     
     <item>
       <title>MySQL: drop all tables</title>

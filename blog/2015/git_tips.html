@@ -1,0 +1,180 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head profile="http://www.w3.org/2005/10/profile">
+   <meta charset="utf-8"/>
+    <title>Git: quick tips</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personal website of Sumit Kumar IIT Kharagpur">
+    <meta name="author" content="Sumit Kumar">
+    <meta name="keywords" content="Sumit Kumar, IIT Kharagpur, Maths, Computing, Software, BigData, Resume, Website">
+
+    <link rel="icon" 
+      type="image/jpeg" 
+      href="/img/ep.jpg" />
+    <link type="text/css" href="../..//css/style.css" rel="stylesheet">
+    <link type="text/css" href="../..//highlighter/all.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="ruler-top"></div>
+<div id="header">
+<h1>Sumit Kumar</h1>
+<h2>Int. Masters <small>(Dual Degree in Maths &amp; Computing)</small>, IIT Kharagpur</h2>
+</div>
+<p class="spacer"></p>
+<div id="content">
+
+
+	<h1>Git: quick tips</h1>
+	<h5>Nov 09, 2015</h5>
+	
+<h2>
+ <a href="/tags/devtip.html">devtip</a>
+ , <a href="/tags/git.html">git</a>
+ 
+</h2>
+
+
+
+
+
+	<p><p><strong>Handy commands</strong><br/><ul><br/><li>Change a commit message (only if it has not been pushed to upstream)</li><br/><pre name="code" class="brush:bash"><br/>$ git commit --amend -m "&lt;NEW_COMMIT_MESSAGE&gt;"<br/></pre></p>
+<li>Merge multiple changes from a separate branch "branch-x" into current branch</li>
+<pre name="code" class="brush:bash">
+$ git merge --squash branch-x
+</pre>
+<li>Pull changes from remote without creating "pseudo change" commits and rebase local changes on top of remote state</li>
+<pre name="code" class="brush:bash">
+$ git pull --rebase
+</pre>
+<li>Merge and/or squash multiple changes (N number of commits) in current branch</li>
+<pre name="code" class="brush:bash">
+$ git rebase -i HEAD~N
+</pre>
+<li>Push local branch to a different branch</li>
+<pre name="code" class="brush:bash">
+$ git push origin branch-x-v2:branch-x-v2-sumit
+Total 0 (delta 0), reused 0 (delta 0)
+To ssh://git.server.com/pkg/MyPackage
+ * [new branch]      branch-x-v2 -> branch-x-v2-sumit
+</pre>
+<li>Rename a remote branch without changing local branches </li>
+<pre name="code" class="brush:bash">
+$ git push origin origin/branch-x-v2:refs/heads/branch-x-v2-old :branch-x-v2
+Total 0 (delta 0), reused 0 (delta 0)
+To ssh://git.server.com/pkg/MyPackage
+ - [deleted]         branch-x-v1
+ * [new branch]      origin/branch-x-v2 -> branch-x-v2-old
+</pre><p></ul></p><p><strong>Git Stash</strong><br/><ul><br/><li>Push uncommitted changes to stash </li><br/><pre name="code" class="brush:bash"><br/>$ git stash save "message"<br/></pre></p>
+<li>See list of stashes</li>
+<pre name="code" class="brush:bash">
+$ git stash list
+stash@{0}: On branch-x: foo bar 1
+stash@{1}: On branch-x: foo bar
+</pre>
+<li>See changes in a particular stash</li>
+<pre name="code" class="brush:bash">
+$ git stash show -p stash@{0}
+diff --git a/build.xml b/build.xml
+index 6ce3fdf..15669ac 100644
+--- a/build.xml
++++ b/build.xml
+@@ -2,7 +2,6 @@
+ 
+....
+....
+</pre>
+<li>Remove a single stash from the list and apply to current state</li>
+<pre name="code" class="brush:bash">
+$ git stash pop stash@{1}
+On branch branch-x
+Your branch is up-to-date with 'origin/branch-x'.
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+ 
+        modified:   build.xml
+ 
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+ 
+        ....
+ 
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped stash@{1} (caceeb6392c7a40dd8325f3a2fdf038342e629cf)
+</pre>
+<li>Apply a single stash without removing it from the list </li>
+<pre name="code" class="brush:bash">
+$ git stash apply stash@{0}
+On branch branch-x
+Your branch is up-to-date with 'origin/branch-x'.
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+ 
+        modified:   build.xml
+ 
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+.....
+no changes added to commit (use "git add" and/or "git commit -a")
+</pre>
+<li>Create a branch out of a stash </li>
+<pre name="code" class="brush:bash">
+$ git stash branch my-branch stash@{0}
+</pre>
+<li>Drop a stash</li>
+<pre name="code" class="brush:bash">
+$ git stash drop stash@{0}   
+Dropped stash@{0} (f697125c22addf9cf31e8ac36b384857110fec0e)
+</pre>
+<li>Clear all stash</li>
+<pre name="code" class="brush:bash">
+$ git stash clear
+</pre><p></ul></p></p>
+</div>
+<table id="linkmenu" align="center" bgcolor="#ffffff" cellpadding="5"
+	cellspacing="1">
+	<tr>
+		<td class="title">Links</td>
+
+<td><a  href="/achievements.html">Awards & recognitions</a></td>
+
+<td><a target="_blank" href="/resume.html">Resume</a></td>
+
+<td><a  href="/personal.html">Personal</a></td>
+
+<td><a  href="/technical.html">Technical</a></td>
+
+<td><a  href="/misc.html">Miscellaneous</a></td>
+
+<td><a href="/blog/index.html">My Blog</a></td>
+
+	</tr>
+</table>
+
+
+<div class="ruler-bottom">&nbsp;</div>
+
+<div id="last-updated">Last Updated: Nov 09 2015</em></div>
+
+<script type="text/javascript" src="/highlighter/all.js">
+</script>
+<script type="text/javascript">
+SyntaxHighlighter.config.stripBrs=true;
+SyntaxHighlighter.all();
+</script>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-540223-5");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+
+</body>
+</html>
+
