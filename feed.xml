@@ -6,8 +6,8 @@
     <atom:link href="http://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-US</language>
-    <pubDate>Mon, 5 Dec 2016 07:48:50 -0800</pubDate>
-    <lastBuildDate>Mon, 5 Dec 2016 07:48:50 -0800</lastBuildDate>
+    <pubDate>Mon, 5 Dec 2016 09:20:50 -0800</pubDate>
+    <lastBuildDate>Mon, 5 Dec 2016 09:20:50 -0800</lastBuildDate>
 
     
     <item>
@@ -209,7 +209,14 @@ function isReachable(){
 	local port=$2
 	nc -w 1 -z &quot;$host&quot; &quot;$port&quot;
 }
-&lt;/pre&gt;&lt;h2&gt;Multi-line echo statements&lt;/h2&gt;&lt;p&gt;This is very useful for generating a templated output&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;&lt;br/&gt;cat&amp;lt;&amp;lt;EOL&lt;/p&gt;&lt;h1&gt;can use shell variables as well in between the EOL,&lt;/h1&gt;&lt;h1&gt;the variables would be expanded.&lt;/h1&gt;&lt;p&gt;var1=$var1&lt;br/&gt;EOL&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;&lt;h2&gt;Handling script inputs&lt;/h2&gt;
+&lt;/pre&gt;&lt;h2&gt;Multi-line echo statements&lt;/h2&gt;&lt;p&gt;This is very useful for generating a templated output&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+cat&amp;lt;&amp;lt;EOL
+# can use shell variables as well in between the EOL,
+# the variables would be expanded.
+var1=$var1
+EOL
+&lt;/pre&gt;&lt;h2&gt;Handling script inputs&lt;/h2&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
 # verify that parameters were passed
 [ &quot;$#&quot; == &quot;0&quot; ] &amp;&amp; showUsage

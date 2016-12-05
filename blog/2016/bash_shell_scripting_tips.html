@@ -232,7 +232,14 @@ function isReachable(){
 	local port=$2
 	nc -w 1 -z "$host" "$port"
 }
-</pre><h2>Multi-line echo statements</h2><p>This is very useful for generating a templated output<br/><pre name="code" class="brush:bash"><br/>cat&lt;&lt;EOL</p><h1>can use shell variables as well in between the EOL,</h1><h1>the variables would be expanded.</h1><p>var1=$var1<br/>EOL<br/></pre></p><h2>Handling script inputs</h2>
+</pre><h2>Multi-line echo statements</h2><p>This is very useful for generating a templated output</p>
+<pre name="code" class="brush:bash">
+cat&lt;&lt;EOL
+# can use shell variables as well in between the EOL,
+# the variables would be expanded.
+var1=$var1
+EOL
+</pre><h2>Handling script inputs</h2>
 <pre name="code" class="brush:bash">
 # verify that parameters were passed
 [ "$#" == "0" ] && showUsage
