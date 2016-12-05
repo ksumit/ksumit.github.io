@@ -6,9 +6,270 @@
     <atom:link href="http://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-US</language>
-    <pubDate>Mon, 13 Jun 2016 21:21:26 -0700</pubDate>
-    <lastBuildDate>Mon, 13 Jun 2016 21:21:26 -0700</lastBuildDate>
+    <pubDate>Mon, 5 Dec 2016 07:48:50 -0800</pubDate>
+    <lastBuildDate>Mon, 5 Dec 2016 07:48:50 -0800</lastBuildDate>
 
+    
+    <item>
+      <title>Bash recipes</title>
+      <link>http://www.sumitkumar.in/blog/2016/bash_shell_scripting_tips.html</link>
+      <pubDate>Mon, 5 Dec 2016 00:00:00 -0800</pubDate>
+      <guid isPermaLink="false">blog/2016/bash_shell_scripting_tips.html</guid>
+      <description>
+      &lt;h2&gt;Using script name and path in the script&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+SCRIPT_DIR=$(dirname &quot;$0&quot;)
+SCRIPT_NAME=$(basename &quot;$0&quot;)
+&lt;/pre&gt;&lt;h2&gt;Iterate N times&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+        for (( i=0; i&lt;$N; i++ ));
+        do
+				# do whatever
+        done
+&lt;/pre&gt;&lt;h2&gt;Retry using while&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+		while [ &quot;$success&quot; != &quot;0&quot; -a &quot;$retryAttempt&quot; -le &quot;$MAX_RETRIES&quot; ];
+		do
+				retryAttempt=$((retryAttempt + 1))
+				sleep $SLEEP_INTERVAL
+				## do some work that returns with exit code 0 on success
+				## and non-zero exit code on error
+				success=&quot;$?&quot;
+		done
+&lt;/pre&gt;&lt;h2&gt;Iterate over an array using indices&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+        # declare an array as below, default field separator is space
+        myArray=(&quot;elem1&quot; &quot;elem2&quot; &quot;elem3&quot;)
+        desiredValue=&quot;elem2&quot;
+        myArrayCount=${#myArray[@]}
+        for (( i=0; i&lt;${myArrayCount}; i++ ));
+        do
+           if [ &quot;${myArray[$i]}&quot; == &quot;$desiredValue&quot; ]; then
+				# do something, for example just echo
+				echo &quot;Found ${myArray[$i]}&quot;
+           fi
+        done
+&lt;/pre&gt;&lt;h2&gt;Append element to a variable&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+		myVar=&quot;elem1&quot;
+		myVar+=&quot;elem2&quot;
+		myVar+=&quot; elem3&quot;
+		# now myVar is &quot;elem1elem2 elem3&quot;
+&lt;/pre&gt;&lt;h2&gt;Append element to an array&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+		myArray=()
+		myArray+=(&quot;elem1&quot;)
+		myArray+=(&quot;elem2&quot;)
+		myArray+=(&quot;elem3&quot;)
+		# now myArray is (&quot;elem1&quot; &quot;elem2&quot; &quot;elem3&quot;)
+&lt;/pre&gt;&lt;h2&gt;Join an array of strings on a delimiter&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+function joinStrings(){
+	local d=$1
+	shift
+	echo -n &quot;$1&quot;
+	shift
+	printf &quot;%s&quot; &quot;${@/#/$d}&quot;
+}
+
+# joinStrings &quot;:::&quot; a b c -&gt; a:::b:::c
+&lt;/pre&gt;&lt;h2&gt;Taking array as argument for a function call&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+		function myFunc(){
+                local array=(&quot;$@&quot;)
+                local i=0
+                for elem in ${array[@]};
+                do
+                        echo &quot;elem[$i]=${elem}&quot;
+                        i=$((i + 1))
+                done
+
+                ## using indices
+                elemsCount=${#array[@]}
+                for (( i=0; i&lt;${elemsCount}; i++ ));
+                do
+                        echo &quot;elem[$i]=${array[$i]}&quot;
+                done
+		}
+
+		myFunc &quot;elem1&quot; &quot;elem2&quot; &quot;elem3&quot;
+&lt;/pre&gt;&lt;h2&gt;Taking fixed number of mixed arguments for a function call&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+		# takes 3 arguments, third argument is an array
+		function myFunc(){
+				local param1=$1
+				local param2=$2
+				shift
+				shift
+				local array=(&quot;$@&quot;)
+				local i=0
+				for elem in ${array[@]};
+				do
+						echo &quot;elem[$i]=${elem}&quot;
+						i=$((i + 1))
+				done
+
+				## using indices
+				elemsCount=${#array[@]}
+				for (( i=0; i&lt;${elemsCount}; i++ ));
+				do
+						echo &quot;elem[$i]=${array[$i]}&quot;
+				done
+				echo &quot;param1=$param1&quot;
+				echo &quot;param2=$param2&quot;
+		}
+
+		myFunc &quot;param1&quot; &quot;param2&quot; &quot;elem1&quot; &quot;elem2&quot; &quot;elem3&quot;
+&lt;/pre&gt;&lt;h2&gt;Taking multiple arrays as arguments for a function call&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+function myFunc(){
+  local array1=($1)
+  local array2=($2)
+
+  echo &quot;array1=${array1[@]}&quot;
+  echo &quot;array2=${array2[@]}&quot;
+}
+# everything in between quotes (&quot; &quot;) is treated as a single argument irrespective of spaces
+myFunc &quot;$(joinStrings &apos; &apos; a b c)&quot; &quot;$(joinStrings &apos; &apos; d e f)&quot; 
+&lt;/pre&gt;&lt;h2&gt;Log all script parameters (including the script name)&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+echo &quot;$0 $@&quot; &gt;&gt; ${LOG_FILE}
+&lt;/pre&gt;&lt;h2&gt;Trap interrupts and exit instead of continuing the loop&lt;/h2&gt;&lt;p&gt;If there are loops in script logic and there are interrupts (like CTRL-C), the shell terminates the immediate operation but continues to the next iteration of the loop. To terminate the script completely, following statement must be used before executing the loop.&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;&lt;br/&gt;trap &quot;echo Exited!; exit;&quot; SIGINT SIGTERM&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;&lt;h2&gt;Running parallel operations in batches&lt;/h2&gt;&lt;p&gt;Shell scripts don&apos;t have threads however they can leverage background jobs to run parallel operations. This works with both function calls and shell commands.&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+
+		function waitForBackgroundProcesses(){
+			local pids=($@)
+			local pidCount=${#pids[@]}
+			for (( i=0; i&lt;$pidCount; i++ ))
+			do  
+				local bgPid=${pids[$i]}
+				wait $bgPid
+				echo &quot;$bgPid exited with code: $?&quot; 
+			done
+		}
+
+		function doBusyTask(){
+			sleep $1
+		}
+
+		BATCH_SIZE=2
+		pidsInBatch=()
+		args=(2 4 5 2 1 3)
+		for arg in ${args[@]};
+		do
+			doBusyTask $arg &amp;
+			processId=&quot;$!&quot;
+			pidsInBatch+=($processId)
+			if [ &quot;${#pidsInBatch[@]}&quot; == &quot;$BATCH_SIZE&quot; ];then
+				waitForBackgroundProcesses ${pidsInBatch[@]}
+				pidsInBatch=()
+			fi  
+		done
+&lt;/pre&gt;&lt;p&gt;However when parent script exits, it will leave the background jobs running. To terminate background jobs as well, we need to do another trap handling for script exit:&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;&lt;br/&gt;trap &apos;bgPids=$(jobs -pr); [ -z &quot;$bgPids&quot; ] || kill &quot;$bgPids&quot;;&apos; EXIT&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;&lt;h2&gt;Compare two files line by line ignoring the ordering&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+# returns 1 if the match doesn&apos;t hold true
+# otherwise 0
+#
+# return code can be verified as exit code after
+# the function call
+function compareFile1InFile2(){
+	local file1=$1
+	local file2=$2
+	local lineCountFile1=$(cat $file1|wc -l)
+	local numberOfLinesMatched=$(grep -f &quot;$file1&quot; &quot;$file2&quot; |sort -u|wc -l)
+	if [ &quot;$numberOfLinesMatched&quot; != &quot;$lineCountFile1&quot; ];then
+		return 1
+	else
+		return 0
+	fi
+}
+&lt;/pre&gt;&lt;h2&gt;Diff between two variables&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+# example:
+#	diffVar1Var2 &quot;$var1&quot; &quot;$var2&quot;
+function diffVar1Var2(){
+        local var1=$1
+        local var2=$2
+        diff &lt;(echo &quot;$var1&quot;) &lt;(echo &quot;$var2&quot;)
+}
+&lt;/pre&gt;&lt;h2&gt;Show differences between two arrays&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+# space works as separator for elements inside a variable
+# example:
+#	diffXVar1Var2 &quot;${array1[@]}&quot; &quot;${array2[@]}&quot;
+function diffXVar1Var2(){
+        local var1=$1
+        local var2=$2
+        diff &lt;(echo &quot;$var1&quot;|tr &apos; &apos; &apos;\n&apos;|sort) &lt;(echo &quot;$var2&quot;|tr &apos; &apos; &apos;\n&apos;|sort)
+}
+&lt;/pre&gt;&lt;h2&gt;Check if host is reachable on a given port&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+function isReachable(){
+	local host=$1
+	local port=$2
+	nc -w 1 -z &quot;$host&quot; &quot;$port&quot;
+}
+&lt;/pre&gt;&lt;h2&gt;Multi-line echo statements&lt;/h2&gt;&lt;p&gt;This is very useful for generating a templated output&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;&lt;br/&gt;cat&amp;lt;&amp;lt;EOL&lt;/p&gt;&lt;h1&gt;can use shell variables as well in between the EOL,&lt;/h1&gt;&lt;h1&gt;the variables would be expanded.&lt;/h1&gt;&lt;p&gt;var1=$var1&lt;br/&gt;EOL&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;&lt;h2&gt;Handling script inputs&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+# verify that parameters were passed
+[ &quot;$#&quot; == &quot;0&quot; ] &amp;&amp; showUsage
+# &quot;:&quot; after a character indicates the parameter requires a value
+# for example after a and p
+while getopts &quot;fa:p:&quot; opt; do
+	case &quot;$opt&quot; in
+		f) flagEnabled=&quot;1&quot; ;;
+		a) argsAsArray+=(&quot;$OPTARG&quot;) ;;
+		s) argAsParam=&quot;$OPTARG&quot; ;;
+		*) 
+		   showUsage &gt;&amp;2
+		   ;;
+	esac
+done
+validateOptions
+&lt;/pre&gt;&lt;h2&gt;Log all script activity to a log file&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+# enable debugging, prints script lines to the stdout
+set -x
+# execute the rest of the script and append the output to 
+# LOG_FILE 
+exec &amp;&gt; &gt;(tee -a &quot;$LOG_FILE&quot;)
+# write stderr to stdout for the rest of the script
+exec 2&gt;&amp;1
+&lt;/pre&gt;&lt;h2&gt;Checking regex in if condition&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+# check if value of var starts with &quot;MY_PREFIX&quot;
+if [[ &quot;$var&quot; =~ ^MY_PREFIX ]];then
+	# do something
+fi
+# check if value of var doesn&apos;t start with &quot;MY_PREFIX&quot;
+if [[ ! &quot;$var&quot; =~ ^MY_PREFIX ]];then
+	# do something
+fi
+# check if value of var contains &quot;MY_VALUE&quot;
+if [[ &quot;$var&quot; =~ MY_VALUE ]];then
+	# do something
+fi
+&lt;/pre&gt;&lt;h2&gt;Sharing variables and utility functions across multiple scripts&lt;/h2&gt;&lt;p&gt;Define shared variables and utility functions in logically separate scripts and include them in every script where needed like below.&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+source path/library1.sh
+. path/library2.sh
+&lt;/pre&gt;&lt;h2&gt;Reading a file line by line&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+OLDIFS=$IFS
+# changing field separator so that we can read line by line
+IFS=$&apos;\n&apos;
+i=1
+allLines=$(cat ${FILE})
+for line in $allLines;
+do
+	# changing field separator back so that rest of the logic works normally
+	IFS=$OLDIFS
+	echo &quot;line $i: $line&quot;
+	i=$((i + 1))
+done
+&lt;/pre&gt;
+	  </description>
+    </item>
     
     <item>
       <title>Git: quick tips</title>
