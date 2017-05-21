@@ -131,6 +131,22 @@ Dropped stash@{0} (f697125c22addf9cf31e8ac36b384857110fec0e)
 <li>Clear all stash</li>
 <pre name="code" class="brush:bash">
 $ git stash clear
+</pre><p></ul></p><p><strong>Using vimdiff for resolving merge conflicts</strong><br/><ul><br/><li>Configure vimdiff as mergetool</li><br/><pre name="code" class="brush:bash;"><br/>git config merge.tool vimdiff<br/>git config merge.conflictstyle diff3<br/>git config mergetool.prompt false<br/></pre></p>
+<li>Run mergetool on conflict</li>
+<pre name="code" class="brush:bash">
+git mergetool
+</pre>
+<li>Doing merge on vimdiff</li>
+<pre name="code" class="brush:bash">
+# get diff from REMOTE – file we are merging into your branch
+:diffget RE
+:diffg RE
+# get diff from BASE - common ancestor, how file looked before both changes
+:diffget BA
+:diffg BA
+# get diff from LOCAL – this is file from the current branch
+:diffget LO
+:diffg LO
 </pre><p></ul></p></p>
 </div>
 <table id="linkmenu" align="center" bgcolor="#ffffff" cellpadding="5"

@@ -6,8 +6,8 @@
     <atom:link href="http://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-US</language>
-    <pubDate>Mon, 5 Dec 2016 09:20:50 -0800</pubDate>
-    <lastBuildDate>Mon, 5 Dec 2016 09:20:50 -0800</lastBuildDate>
+    <pubDate>Sun, 21 May 2017 13:09:33 -0700</pubDate>
+    <lastBuildDate>Sun, 21 May 2017 13:09:33 -0700</lastBuildDate>
 
     
     <item>
@@ -377,6 +377,22 @@ Dropped stash@{0} (f697125c22addf9cf31e8ac36b384857110fec0e)
 &lt;li&gt;Clear all stash&lt;/li&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
 $ git stash clear
+&lt;/pre&gt;&lt;p&gt;&lt;/ul&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Using vimdiff for resolving merge conflicts&lt;/strong&gt;&lt;br/&gt;&lt;ul&gt;&lt;br/&gt;&lt;li&gt;Configure vimdiff as mergetool&lt;/li&gt;&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:bash;&quot;&gt;&lt;br/&gt;git config merge.tool vimdiff&lt;br/&gt;git config merge.conflictstyle diff3&lt;br/&gt;git config mergetool.prompt false&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;li&gt;Run mergetool on conflict&lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+git mergetool
+&lt;/pre&gt;
+&lt;li&gt;Doing merge on vimdiff&lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+# get diff from REMOTE – file we are merging into your branch
+:diffget RE
+:diffg RE
+# get diff from BASE - common ancestor, how file looked before both changes
+:diffget BA
+:diffg BA
+# get diff from LOCAL – this is file from the current branch
+:diffget LO
+:diffg LO
 &lt;/pre&gt;&lt;p&gt;&lt;/ul&gt;&lt;/p&gt;
 	  </description>
     </item>
