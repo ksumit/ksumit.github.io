@@ -6,8 +6,8 @@
     <atom:link href="http://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-US</language>
-    <pubDate>Sun, 21 May 2017 13:09:33 -0700</pubDate>
-    <lastBuildDate>Sun, 21 May 2017 13:09:33 -0700</lastBuildDate>
+    <pubDate>Tue, 23 Jan 2018 21:46:59 -0800</pubDate>
+    <lastBuildDate>Tue, 23 Jan 2018 21:46:59 -0800</lastBuildDate>
 
     
     <item>
@@ -285,6 +285,13 @@ done
       <guid isPermaLink="false">blog/2015/git_tips.html</guid>
       <description>
       &lt;p&gt;&lt;strong&gt;Handy commands&lt;/strong&gt;&lt;br/&gt;&lt;ul&gt;&lt;br/&gt;&lt;li&gt;Change a commit message (only if it has not been pushed to upstream)&lt;/li&gt;&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;&lt;br/&gt;$ git commit --amend -m &quot;&amp;lt;NEW_COMMIT_MESSAGE&amp;gt;&quot;&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;li&gt;List difference of commits (list of commits) between branches &lt;/li&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ git cherry -v &amp;lt;other_branch&amp;gt;
++ 2deea696b5040f3269130aa5cadd5a8c123550b3 first commit
++ cc08a232c5a06f409f6e1f8fc8915e27a1485a22 second commit
+- 24831ddb1788217ff24da9e85038dadf7045db7e different commit on the other_branch
+&lt;/pre&gt;
 &lt;li&gt;Merge multiple changes from a separate branch &quot;branch-x&quot; into current branch&lt;/li&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
 $ git merge --squash branch-x
@@ -336,13 +343,13 @@ $ git stash pop stash@{1}
 On branch branch-x
 Your branch is up-to-date with &apos;origin/branch-x&apos;.
 Changes not staged for commit:
-  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)
-  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)
+  (use &quot;git add &amp;lt;file&amp;gt;...&quot; to update what will be committed)
+  (use &quot;git checkout -- &amp;lt;file&amp;gt;...&quot; to discard changes in working directory)
  
         modified:   build.xml
  
 Untracked files:
-  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+  (use &quot;git add &amp;lt;file&amp;gt;...&quot; to include in what will be committed)
  
         ....
  
@@ -355,13 +362,13 @@ $ git stash apply stash@{0}
 On branch branch-x
 Your branch is up-to-date with &apos;origin/branch-x&apos;.
 Changes not staged for commit:
-  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)
-  (use &quot;git checkout -- &lt;file&gt;...&quot; to discard changes in working directory)
+  (use &quot;git add &amp;lt;file&amp;gt;...&quot; to update what will be committed)
+  (use &quot;git checkout -- &amp;lt;file&amp;gt;...&quot; to discard changes in working directory)
  
         modified:   build.xml
  
 Untracked files:
-  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+  (use &quot;git add &amp;lt;file&amp;gt;...&quot; to include in what will be committed)
 .....
 no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)
 &lt;/pre&gt;
@@ -377,10 +384,12 @@ Dropped stash@{0} (f697125c22addf9cf31e8ac36b384857110fec0e)
 &lt;li&gt;Clear all stash&lt;/li&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
 $ git stash clear
-&lt;/pre&gt;&lt;p&gt;&lt;/ul&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Using vimdiff for resolving merge conflicts&lt;/strong&gt;&lt;br/&gt;&lt;ul&gt;&lt;br/&gt;&lt;li&gt;Configure vimdiff as mergetool&lt;/li&gt;&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:bash;&quot;&gt;&lt;br/&gt;git config merge.tool vimdiff&lt;br/&gt;git config merge.conflictstyle diff3&lt;br/&gt;git config mergetool.prompt false&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;
-&lt;li&gt;Run mergetool on conflict&lt;/li&gt;
+&lt;/pre&gt;&lt;p&gt;&lt;/ul&gt;&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Using vimdiff for resolving merge conflicts &lt;/strong&gt;&lt;br/&gt;&lt;ul&gt;&lt;br/&gt;&lt;li&gt;Run mergetool on conflict&lt;/li&gt;&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;&lt;br/&gt;git mergetool&lt;br/&gt;&lt;/pre&gt;&lt;/p&gt;
+&lt;li&gt;Configure vimdiff as mergetool&lt;/li&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
-git mergetool
+$ git config merge.tool vimdiff
+$ git config merge.conflictstyle diff3
+$ git config mergetool.prompt false
 &lt;/pre&gt;
 &lt;li&gt;Doing merge on vimdiff&lt;/li&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;

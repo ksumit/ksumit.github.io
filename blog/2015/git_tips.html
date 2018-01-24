@@ -39,6 +39,13 @@
 
 
 	<p><p><strong>Handy commands</strong><br/><ul><br/><li>Change a commit message (only if it has not been pushed to upstream)</li><br/><pre name="code" class="brush:bash"><br/>$ git commit --amend -m "&lt;NEW_COMMIT_MESSAGE&gt;"<br/></pre></p>
+<li>List difference of commits (list of commits) between branches </li>
+<pre name="code" class="brush:bash">
+$ git cherry -v &lt;other_branch&gt;
++ 2deea696b5040f3269130aa5cadd5a8c123550b3 first commit
++ cc08a232c5a06f409f6e1f8fc8915e27a1485a22 second commit
+- 24831ddb1788217ff24da9e85038dadf7045db7e different commit on the other_branch
+</pre>
 <li>Merge multiple changes from a separate branch "branch-x" into current branch</li>
 <pre name="code" class="brush:bash">
 $ git merge --squash branch-x
@@ -90,13 +97,13 @@ $ git stash pop stash@{1}
 On branch branch-x
 Your branch is up-to-date with 'origin/branch-x'.
 Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git checkout -- <file>..." to discard changes in working directory)
+  (use "git add &lt;file&gt;..." to update what will be committed)
+  (use "git checkout -- &lt;file&gt;..." to discard changes in working directory)
  
         modified:   build.xml
  
 Untracked files:
-  (use "git add <file>..." to include in what will be committed)
+  (use "git add &lt;file&gt;..." to include in what will be committed)
  
         ....
  
@@ -109,13 +116,13 @@ $ git stash apply stash@{0}
 On branch branch-x
 Your branch is up-to-date with 'origin/branch-x'.
 Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git checkout -- <file>..." to discard changes in working directory)
+  (use "git add &lt;file&gt;..." to update what will be committed)
+  (use "git checkout -- &lt;file&gt;..." to discard changes in working directory)
  
         modified:   build.xml
  
 Untracked files:
-  (use "git add <file>..." to include in what will be committed)
+  (use "git add &lt;file&gt;..." to include in what will be committed)
 .....
 no changes added to commit (use "git add" and/or "git commit -a")
 </pre>
@@ -131,10 +138,12 @@ Dropped stash@{0} (f697125c22addf9cf31e8ac36b384857110fec0e)
 <li>Clear all stash</li>
 <pre name="code" class="brush:bash">
 $ git stash clear
-</pre><p></ul></p><p><strong>Using vimdiff for resolving merge conflicts</strong><br/><ul><br/><li>Configure vimdiff as mergetool</li><br/><pre name="code" class="brush:bash;"><br/>git config merge.tool vimdiff<br/>git config merge.conflictstyle diff3<br/>git config mergetool.prompt false<br/></pre></p>
-<li>Run mergetool on conflict</li>
+</pre><p></ul></p><p><strong>Using vimdiff for resolving merge conflicts </strong><br/><ul><br/><li>Run mergetool on conflict</li><br/><pre name="code" class="brush:bash"><br/>git mergetool<br/></pre></p>
+<li>Configure vimdiff as mergetool</li>
 <pre name="code" class="brush:bash">
-git mergetool
+$ git config merge.tool vimdiff
+$ git config merge.conflictstyle diff3
+$ git config mergetool.prompt false
 </pre>
 <li>Doing merge on vimdiff</li>
 <pre name="code" class="brush:bash">
