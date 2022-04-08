@@ -6,9 +6,83 @@
     <atom:link href="http://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-US</language>
-    <pubDate>Sat, 30 Mar 2019 15:08:03 -0700</pubDate>
-    <lastBuildDate>Sat, 30 Mar 2019 15:08:03 -0700</lastBuildDate>
+    <pubDate>Fri, 8 Apr 2022 15:37:34 -0700</pubDate>
+    <lastBuildDate>Fri, 8 Apr 2022 15:37:34 -0700</lastBuildDate>
 
+    
+    <item>
+      <title>Docker: Quick tips</title>
+      <link>http://www.sumitkumar.in/blog/2022/docker_tips.html</link>
+      <pubDate>Fri, 8 Apr 2022 00:00:00 -0700</pubDate>
+      <guid isPermaLink="false">blog/2022/docker_tips.html</guid>
+      <description>
+      &lt;h2&gt;Run a container locally with an entrypoint&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+docker run -it ubuntu:latest /bin/bash
+&lt;/pre&gt;&lt;h2&gt;Run a container locally as a root or other user with an entrypoint.&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+# the user must be a valid user on the image
+docker run -it -u nobody ubuntu:latest /bin/bash
+
+# useful if root access required to update contents on the image
+docker run -it -u root ubuntu:latest /bin/bash
+
+docker exec -it -u root &lt;container_id&gt; /bin/bash
+&lt;/pre&gt;&lt;h2&gt;Map host path to container path&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+docker run -v /home/myuser:/home/myuser -it ubuntu:latest /bin/bash
+&lt;/pre&gt;&lt;h2&gt;Attach a debugging container to running container in the running container&apos;s network&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+docker run -it --rm --link  &lt;container_id&gt; alpine sh
+&lt;/pre&gt;&lt;h2&gt;Attach a debugging container to running container in the container&apos;s PID and namespace with file system level access as well&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+docker run -it --pid=container:&lt;container_id&gt; --net=container:&lt;container_id&gt; --cap-add sys_admin  --cap-add sys_ptrace ubuntu:18.04 /bin/bash
+&lt;/pre&gt;&lt;p&gt;Running container&apos;s file system is available in /proc/1/root/ and we can look at running processes from the running container as well from this attached container. This is powerful for debugging issues.&lt;/p&gt;&lt;h2&gt;Delete all exited containers&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+docker rm $(docker ps --filter status=exited -q)
+&lt;/pre&gt;&lt;h2&gt;Delete clean up all resources&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+docker system prune -a
+&lt;/pre&gt;&lt;h2&gt;Delete all local images&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+for image in $(docker image ls | awk &apos;{print $3}&apos;);
+do
+    docker rmi -f ${image};
+done
+&lt;/pre&gt;&lt;h2&gt;Delete all local volumes&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+for volume in $(docker volume ls -q);
+do
+    docker volume rm -f ${volume};
+done
+&lt;/pre&gt;&lt;h2&gt;Build an image with Dockerfile in current directory, with arguments&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+docker build --build-arg ARTIFACT_VERSION=0.0.1 -t &lt;image_name&gt;:0.0.1 .
+&lt;/pre&gt;&lt;h2&gt;Export container&apos;s filesystem to a tar (hiding all the history and layers, flattening it)&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+docker export $(docker ps -lq) -o foo.tar
+&lt;/pre&gt;&lt;h2&gt;Save container&apos;s filesystem to a tar (along with layers and history)&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+docker save image:tag &gt; /tmp/image.tar
+&lt;/pre&gt;&lt;h2&gt;Load container image from tarball (along with layers and history)&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+docker load -i /tmp/image.tar
+&lt;/pre&gt;&lt;h2&gt;JDK 10 and above support consuming % of RAM (container)&lt;/h2&gt;&lt;p&gt;The JVM options can be integrated into the Dockerfile in the ENTRYPOINT Java command. But, this will require building another image each time we want to change the values of the JVM options.&lt;br/&gt;A great solution is to integrate this JVM options in the JAVA_OPTS environment variable in the Kubernetes Deployment , which looks like:&lt;br/&gt;&lt;pre name=&quot;code&quot; class=&quot;brush:yaml&quot;&gt;&lt;br/&gt; ...&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;env:
+- name: JAVA_OPTS
+  value: &amp;quot;-XX:MinRAMPercentage=20.0 -XX:MaxRAMPercentage=75.0 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/disk2/dumps&amp;quot;
+...
+
+resources: 
+    limits:
+        memory: 512Mi
+    requests:
+        memory: 256Mi
+
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;/pre&gt;&lt;/p&gt;
+	  </description>
+    </item>
     
     <item>
       <title>Bash recipes</title>

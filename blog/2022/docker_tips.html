@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head profile="http://www.w3.org/2005/10/profile">
+   <meta charset="utf-8"/>
+    <title>Docker: Quick tips</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personal website of Sumit Kumar IIT Kharagpur">
+    <meta name="author" content="Sumit Kumar">
+    <meta name="keywords" content="Sumit Kumar, IIT Kharagpur, Maths, Computing, Software, BigData, Resume, Website">
+
+    <link rel="icon" 
+      type="image/jpeg" 
+      href="/img/ep.jpg" />
+    <link type="text/css" href="../..//css/style.css" rel="stylesheet">
+    <link type="text/css" href="../..//highlighter/all.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="ruler-top"></div>
+<div id="header">
+<h1>Sumit Kumar</h1>
+<h2>Int. Masters <small>(Dual Degree in Maths &amp; Computing)</small>, IIT Kharagpur</h2>
+</div>
+<p class="spacer"></p>
+<div id="content">
+
+
+	<h1>Docker: Quick tips</h1>
+	<h5>Apr 08, 2022</h5>
+	
+<h2>
+ <a href="/tags/devtip.html">devtip</a>
+ , <a href="/tags/docker.html">docker</a>
+ 
+</h2>
+
+
+
+
+
+	<p><h2>Run a container locally with an entrypoint</h2>
+<pre name="code" class="brush:bash">
+docker run -it ubuntu:latest /bin/bash
+</pre><h2>Run a container locally as a root or other user with an entrypoint.</h2>
+<pre name="code" class="brush:bash">
+# the user must be a valid user on the image
+docker run -it -u nobody ubuntu:latest /bin/bash
+
+# useful if root access required to update contents on the image
+docker run -it -u root ubuntu:latest /bin/bash
+
+docker exec -it -u root <container_id> /bin/bash
+</pre><h2>Map host path to container path</h2>
+<pre name="code" class="brush:bash">
+docker run -v /home/myuser:/home/myuser -it ubuntu:latest /bin/bash
+</pre><h2>Attach a debugging container to running container in the running container's network</h2>
+<pre name="code" class="brush:bash">
+docker run -it --rm --link  <container_id> alpine sh
+</pre><h2>Attach a debugging container to running container in the container's PID and namespace with file system level access as well</h2>
+<pre name="code" class="brush:bash">
+docker run -it --pid=container:<container_id> --net=container:<container_id> --cap-add sys_admin  --cap-add sys_ptrace ubuntu:18.04 /bin/bash
+</pre><p>Running container's file system is available in /proc/1/root/ and we can look at running processes from the running container as well from this attached container. This is powerful for debugging issues.</p><h2>Delete all exited containers</h2>
+<pre name="code" class="brush:bash">
+docker rm $(docker ps --filter status=exited -q)
+</pre><h2>Delete clean up all resources</h2>
+<pre name="code" class="brush:bash">
+docker system prune -a
+</pre><h2>Delete all local images</h2>
+<pre name="code" class="brush:bash">
+for image in $(docker image ls | awk '{print $3}');
+do
+    docker rmi -f ${image};
+done
+</pre><h2>Delete all local volumes</h2>
+<pre name="code" class="brush:bash">
+for volume in $(docker volume ls -q);
+do
+    docker volume rm -f ${volume};
+done
+</pre><h2>Build an image with Dockerfile in current directory, with arguments</h2>
+<pre name="code" class="brush:bash">
+docker build --build-arg ARTIFACT_VERSION=0.0.1 -t <image_name>:0.0.1 .
+</pre><h2>Export container's filesystem to a tar (hiding all the history and layers, flattening it)</h2>
+<pre name="code" class="brush:bash">
+docker export $(docker ps -lq) -o foo.tar
+</pre><h2>Save container's filesystem to a tar (along with layers and history)</h2>
+<pre name="code" class="brush:bash">
+docker save image:tag > /tmp/image.tar
+</pre><h2>Load container image from tarball (along with layers and history)</h2>
+<pre name="code" class="brush:bash">
+docker load -i /tmp/image.tar
+</pre><h2>JDK 10 and above support consuming % of RAM (container)</h2><p>The JVM options can be integrated into the Dockerfile in the ENTRYPOINT Java command. But, this will require building another image each time we want to change the values of the JVM options.<br/>A great solution is to integrate this JVM options in the JAVA_OPTS environment variable in the Kubernetes Deployment , which looks like:<br/><pre name="code" class="brush:yaml"><br/> ...</p>
+<pre><code>env:
+- name: JAVA_OPTS
+  value: &quot;-XX:MinRAMPercentage=20.0 -XX:MaxRAMPercentage=75.0 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/disk2/dumps&quot;
+...
+
+resources: 
+    limits:
+        memory: 512Mi
+    requests:
+        memory: 256Mi
+
+...
+</code></pre><p></pre></p></p>
+</div>
+<table id="linkmenu" align="center" bgcolor="#ffffff" cellpadding="5"
+	cellspacing="1">
+	<tr>
+		<td class="title">Links</td>
+
+<td><a  href="/achievements.html">Awards & recognitions</a></td>
+
+<td><a target="_blank" href="/resume.html">Resume</a></td>
+
+<td><a  href="/personal.html">Personal</a></td>
+
+<td><a  href="/technical.html">Technical</a></td>
+
+<td><a  href="/misc.html">Miscellaneous</a></td>
+
+<td><a href="/blog/index.html">My Blog</a></td>
+
+	</tr>
+</table>
+
+
+<div class="ruler-bottom">&nbsp;</div>
+
+<div id="last-updated">Last Updated: Apr 08 2022</em></div>
+
+<script type="text/javascript" src="/highlighter/all.js">
+</script>
+<script type="text/javascript">
+SyntaxHighlighter.config.stripBrs=true;
+SyntaxHighlighter.all();
+</script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DDLGR2V5FE"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DDLGR2V5FE');
+</script>
+</body>
+</html>
+
