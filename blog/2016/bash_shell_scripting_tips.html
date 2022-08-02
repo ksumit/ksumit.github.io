@@ -39,7 +39,27 @@
 
 
 
-	<p><h2>Using script name and path in the script</h2>
+	<p><h2>Replace '\n' or '\r\n' with newline in a file</h2>
+<pre name="code" class="brush:bash">
+awk '{ gsub(/\\n/,"\n"); gsub(/\\r/,""); }1' target_file.txt
+
+OR
+
+sed 's/\\n/'$'\\n''/g' target_file.txt | sed 's/\\r//g'
+</pre><p>#</p><h2>Remove everything except printable characters (required sometimes when copying special character outputs)</h2>
+<pre name="code" class="brush:bash">
+sed $'s/[^[:print:]\t]//g' file.txt
+</pre><h2>Disable expansion of <code>!</code> (exclamation mark)</h2>
+<pre name="code" class="brush:bash">
+# Option 1 - Disable Shell History
+set +H
+
+# Option 2 - Use single quotes around `!` to prevent expansion OR `\` to escape it
+# Below is an exmaple usecase for maven based build use case
+mvn install -Phive -Pyarn -Phive-thriftserver -pl '!':spark-yarn_2.12,'!':spark-hive-thriftserver_2.12,'!':spark-core_2.12,'!':spark-sql_2.12,'!':spark-mllib_2.12,'!':spark-hive_2.12,'!':spark-streaming-kafka-0-10_2.12
+
+mvn install -Phive -Pyarn -Phive-thriftserver -pl \!:spark-yarn_2.12,\!:spark-hive-thriftserver_2.12,\!:spark-core_2.12,\!:spark-sql_2.12,\!:spark-mllib_2.12,\!:spark-hive_2.12,\!:spark-streaming-kafka-0-10_2.12
+</pre><h2>Using script name and path in the script</h2>
 <pre name="code" class="brush:bash">
 SCRIPT_DIR=$(dirname "$0")
 SCRIPT_NAME=$(basename "$0")
@@ -330,15 +350,16 @@ done
 SyntaxHighlighter.config.stripBrs=true;
 SyntaxHighlighter.all();
 </script>
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-DDLGR2V5FE"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5V28C6QCZJ"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'G-DDLGR2V5FE');
+  gtag('config', 'G-5V28C6QCZJ');
 </script>
+
 </body>
 </html>
 

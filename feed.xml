@@ -6,8 +6,8 @@
     <atom:link href="http://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-US</language>
-    <pubDate>Fri, 8 Apr 2022 15:37:34 -0700</pubDate>
-    <lastBuildDate>Fri, 8 Apr 2022 15:37:34 -0700</lastBuildDate>
+    <pubDate>Tue, 2 Aug 2022 11:54:18 -0700</pubDate>
+    <lastBuildDate>Tue, 2 Aug 2022 11:54:18 -0700</lastBuildDate>
 
     
     <item>
@@ -90,7 +90,27 @@ resources:
       <pubDate>Mon, 5 Dec 2016 00:00:00 -0800</pubDate>
       <guid isPermaLink="false">blog/2016/bash_shell_scripting_tips.html</guid>
       <description>
-      &lt;h2&gt;Using script name and path in the script&lt;/h2&gt;
+      &lt;h2&gt;Replace &apos;\n&apos; or &apos;\r\n&apos; with newline in a file&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+awk &apos;{ gsub(/\\n/,&quot;\n&quot;); gsub(/\\r/,&quot;&quot;); }1&apos; target_file.txt
+
+OR
+
+sed &apos;s/\\n/&apos;$&apos;\\n&apos;&apos;/g&apos; target_file.txt | sed &apos;s/\\r//g&apos;
+&lt;/pre&gt;&lt;p&gt;#&lt;/p&gt;&lt;h2&gt;Remove everything except printable characters (required sometimes when copying special character outputs)&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+sed $&apos;s/[^[:print:]\t]//g&apos; file.txt
+&lt;/pre&gt;&lt;h2&gt;Disable expansion of &lt;code&gt;!&lt;/code&gt; (exclamation mark)&lt;/h2&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+# Option 1 - Disable Shell History
+set +H
+
+# Option 2 - Use single quotes around `!` to prevent expansion OR `\` to escape it
+# Below is an exmaple usecase for maven based build use case
+mvn install -Phive -Pyarn -Phive-thriftserver -pl &apos;!&apos;:spark-yarn_2.12,&apos;!&apos;:spark-hive-thriftserver_2.12,&apos;!&apos;:spark-core_2.12,&apos;!&apos;:spark-sql_2.12,&apos;!&apos;:spark-mllib_2.12,&apos;!&apos;:spark-hive_2.12,&apos;!&apos;:spark-streaming-kafka-0-10_2.12
+
+mvn install -Phive -Pyarn -Phive-thriftserver -pl \!:spark-yarn_2.12,\!:spark-hive-thriftserver_2.12,\!:spark-core_2.12,\!:spark-sql_2.12,\!:spark-mllib_2.12,\!:spark-hive_2.12,\!:spark-streaming-kafka-0-10_2.12
+&lt;/pre&gt;&lt;h2&gt;Using script name and path in the script&lt;/h2&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
 SCRIPT_DIR=$(dirname &quot;$0&quot;)
 SCRIPT_NAME=$(basename &quot;$0&quot;)
