@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head profile="http://www.w3.org/2005/10/profile">
+   <meta charset="utf-8"/>
+    <title>Maven: Quick tips</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personal website of Sumit Kumar IIT Kharagpur">
+    <meta name="author" content="Sumit Kumar">
+    <meta name="keywords" content="Sumit Kumar, IIT Kharagpur, Maths, Computing, Software, BigData, Resume, Website">
+
+    <link rel="icon" 
+      type="image/jpeg" 
+      href="/img/ep.jpg" />
+    <link type="text/css" href="../..//css/style.css" rel="stylesheet">
+    <link type="text/css" href="../..//highlighter/all.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="ruler-top"></div>
+<div id="header">
+<h1>Sumit Kumar</h1>
+<h2>Int. Masters <small>(Dual Degree in Maths &amp; Computing)</small>, IIT Kharagpur</h2>
+</div>
+<p class="spacer"></p>
+<div id="content">
+
+
+	<h1>Maven: Quick tips</h1>
+	<h5>Feb 10, 2023</h5>
+	
+<h2>
+ <a href="/tags/devtip.html">devtip</a>
+ , <a href="/tags/maven.html">maven</a>
+ 
+</h2>
+
+
+
+
+
+	<p><h2>Allow HTTP based maven repositories (by default they are blocked in Maven 3.8.x and above)</h2>
+<pre name="code" class="brush:xml">
+<!-- Goes into ~/.m2/settings.xml -->
+<settings>
+  ...
+  ...
+
+  <mirrors>
+  <!-- https://stackoverflow.com/a/68394404 -->
+    <mirror>
+      <id>maven-default-http-blocker</id>
+      <mirrorOf>dummy</mirrorOf>
+      <name>Pseudo repository to mirror external repositories initially using HTTP.</name>
+      <url>http://0.0.0.0/</url>
+      <blocked>false</blocked>
+    </mirror>
+  </mirrors>
+</settings>
+</pre><h2>Disable expansion of <code>!</code> (exclamation mark) while excluding modules in a maven build</h2>
+<pre name="code" class="brush:bash">
+# Option 1 - Disable Shell History
+set +H
+
+# Option 2 - Use single quotes around `!` to prevent expansion OR `\` to escape it
+# Below is an exmaple usecase for maven based build use case
+mvn install -Phive -Pyarn -Phive-thriftserver -pl '!':spark-yarn_2.12,'!':spark-hive-thriftserver_2.12,'!':spark-core_2.12,'!':spark-sql_2.12,'!':spark-mllib_2.12,'!':spark-hive_2.12,'!':spark-streaming-kafka-0-10_2.12
+
+mvn install -Phive -Pyarn -Phive-thriftserver -pl \!:spark-yarn_2.12,\!:spark-hive-thriftserver_2.12,\!:spark-core_2.12,\!:spark-sql_2.12,\!:spark-mllib_2.12,\!:spark-hive_2.12,\!:spark-streaming-kafka-0-10_2.12
+</pre></p>
+</div>
+<table id="linkmenu" align="center" bgcolor="#ffffff" cellpadding="5"
+	cellspacing="1">
+	<tr>
+		<td class="title">Links</td>
+
+<td><a  href="/achievements.html">Awards & recognitions</a></td>
+
+<td><a target="_blank" href="/resume.html">Resume</a></td>
+
+<td><a  href="/personal.html">Personal</a></td>
+
+<td><a  href="/technical.html">Technical</a></td>
+
+<td><a  href="/misc.html">Miscellaneous</a></td>
+
+<td><a href="/blog/index.html">My Blog</a></td>
+
+	</tr>
+</table>
+
+
+<div class="ruler-bottom">&nbsp;</div>
+
+<div id="last-updated">Last Updated: Feb 10 2023</em></div>
+
+<script type="text/javascript" src="/highlighter/all.js">
+</script>
+<script type="text/javascript">
+SyntaxHighlighter.config.stripBrs=true;
+SyntaxHighlighter.all();
+</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5V28C6QCZJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-5V28C6QCZJ');
+</script>
+
+</body>
+</html>
+
