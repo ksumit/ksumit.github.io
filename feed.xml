@@ -6,9 +6,183 @@
     <atom:link href="http://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-US</language>
-    <pubDate>Sat, 11 Feb 2023 23:23:41 -0800</pubDate>
-    <lastBuildDate>Sat, 11 Feb 2023 23:23:41 -0800</lastBuildDate>
+    <pubDate>Fri, 17 Feb 2023 11:41:48 -0800</pubDate>
+    <lastBuildDate>Fri, 17 Feb 2023 11:41:48 -0800</lastBuildDate>
 
+    
+    <item>
+      <title>Docker on Yarn on Azure HDInsight</title>
+      <link>http://www.sumitkumar.in/blog/2023/docker_on_yarn_hdinsight.html</link>
+      <pubDate>Fri, 17 Feb 2023 00:00:00 -0800</pubDate>
+      <guid isPermaLink="false">blog/2023/docker_on_yarn_hdinsight.html</guid>
+      <description>
+      &lt;h1&gt;Using Docker on Yarn support on Azure HDInsight&lt;/h1&gt;&lt;p&gt;Azure HDInsight uses it&apos;s own distribution of open source software (Hadoop, Spark, Hive, Livy etc) that forked from HDP. Though it&apos;s mostly based on open source, there are some fine nuances:&lt;br/&gt;1. HDInsight versions don&apos;t exactly map to an open source release: HDInsight team picks up a release version from open source, applies it&apos;s own private patches and components including some additional commits (for fixes or improvements) from other open source branches to create&lt;br/&gt;a release.&lt;br/&gt;2. HDInsight clusters have HDI specific components that are required for smooth functioning with other Azure services.&lt;/p&gt;&lt;p&gt;This post covers few tricks for running and debugging Docker based workloads on Yarn on an HDInsight cluster. For this post, we will stick to running &lt;code&gt;pi&lt;/code&gt; example that is shipped on the HDInsight clusters but run it inside a docker container.&lt;/p&gt;&lt;h2&gt;Pre-requisite&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Create an HDInsight cluster (Hadoop 3.1.0 or Spark 3.1) with one worker node.&lt;/li&gt;
+&lt;/ul&gt;&lt;p&gt;PS: Keeping it to one worker node gives more control on where the containers get created and that means it&apos;s easier to debug should things go wrong.&lt;/p&gt;&lt;h2&gt;Prepare the cluster for running Docker workload&lt;/h2&gt;&lt;h3&gt;Install Docker on the worker node.&lt;/h3&gt;&lt;p&gt;Run following script either using custom script action or by sshing to the node directly as &lt;code&gt;$ sudo bash -x install_docker.sh&lt;/code&gt;&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+#!/bin/bash
+# install_docker.sh
+set -e
+
+sudo apt-get -y remove docker docker-engine docker.io containerd runc
+sudo apt-get -y update
+sudo apt-get -y install \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+sudo rm -rf /etc/docker /var/lib/docker /run/docker.sock /etc/systemd/system/docker.service.d
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+echo \
+  &quot;deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable&quot; | sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+
+sudo apt-get update
+sudo apt-get -y autoremove
+sudo apt-get -y autoclean
+sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+sudo usermod -aG docker sshuser
+sudo service docker restart
+sudo chmod 666 /var/run/docker.sock
+
+# Verify that we have a working docker setup now.
+docker run hello-world
+&lt;/pre&gt;&lt;h3&gt;Configure Yarn for running Docker workloads&lt;/h3&gt;&lt;p&gt;HDInsight ships with a nifty script called &lt;code&gt;AmbariHelper&lt;/code&gt; on all the nodes for automating interactions with Ambari. We will use &lt;code&gt;AmbariHelper&lt;/code&gt; to configure Yarn in this step by running following python script on one of the headnodes as &lt;code&gt;$ sudo python configure_docker_on_yarn.py&lt;/code&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;font color=&quot;red&quot;&gt;Copying the following formatted script ends up giving some whitespaces in &lt;code&gt;container-executor.cfg&lt;/code&gt;. Before running the python script below, please make sure to remove whitespaces from those empty lines before section headers &lt;code&gt;[docker]&lt;/code&gt;, &lt;code&gt;[gpu]&lt;/code&gt; and &lt;code&gt;[cgroups]&lt;/code&gt; in the script; otherwise &lt;code&gt;container-executor&lt;/code&gt; will complain about invalid configuration&lt;/font&gt;&lt;/b&gt;&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:python&quot;&gt;
+# /usr/bin/python
+# configure_docker_on_yarn.py
+import sys
+from datetime import datetime
+from hdinsight_common.AmbariHelper import AmbariHelper
+
+ambari_helper = AmbariHelper()
+current_ts=datetime.today().strftime(&apos;%Y_%m_%d_%H_%M_%S&apos;)
+
+new_yarn_config = {
+    &quot;yarn.nodemanager.container-executor.class&quot;: &quot;org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor&quot;,
+    &quot;yarn.nodemanager.linux-container-executor.group&quot;: &quot;hadoop&quot;,
+    &quot;yarn.nodemanager.linux-container-executor.nonsecure-mode.limit-users&quot;: &quot;false&quot;,
+    &quot;yarn.nodemanager.runtime.linux.allowed-runtimes&quot;: &quot;default,docker&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.allowed-container-networks&quot;: &quot;host,none,bridge&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.default-container-network&quot;: &quot;host&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.host-pid-namespace.allowed&quot;: &quot;false&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.privileged-containers.allowed&quot;: &quot;false&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.privileged-containers.acl&quot;: &quot;&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.capabilities&quot;: &quot;CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.delayed-removal.allowed&quot;: &quot;true&quot;,
+    &quot;yarn.nodemanager.delete.debug-delay-sec&quot;: &quot;900&quot;
+}
+
+# Apply the configurations to yarn-site
+ambari_helper.update_latest_service_config(&quot;yarn-site&quot;, &quot;YARN&quot;, &quot;update_yarn_site_for_docker_&quot; + current_ts, new_yarn_config)
+
+container_executor_cfg=&quot;&quot;&quot;
+yarn.nodemanager.local-dirs=/mnt/resource/hadoop/yarn/local
+yarn.nodemanager.log-dirs=/mnt/resource/hadoop/yarn/log
+yarn.nodemanager.linux-container-executor.group=hadoop
+banned.users=hdfs,yarn,mapred,bin
+min.user.id=1000
+
+[docker]
+  module.enabled=true
+  docker.binary=/usr/bin/docker
+  docker.allowed.capabilities=CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE
+  docker.allowed.devices=
+  docker.allowed.networks=host,none,bridge
+  docker.allowed.ro-mounts=/etc/passwd,/etc/group,/mnt/resource/hadoop/yarn/local,/usr/lib/hdinsight-common
+  docker.allowed.rw-mounts=/mnt/resource/hadoop/yarn/local,/mnt/resource/hadoop/yarn/log
+  docker.privileged-containers.enabled=false
+  docker.trusted.registries=local
+  docker.allowed.volume-drivers=
+
+[gpu]
+  module.enabled=false
+
+[cgroups]
+  root=/sys/fs/cgroup
+  yarn-hierarchy=yarn
+&quot;&quot;&quot;
+container_executor_properties = {
+    &quot;content&quot;: container_executor_cfg
+}
+# Update container-executor.cfg 
+ambari_helper.update_latest_service_config(&quot;container-executor&quot;, &quot;YARN&quot;, &quot;update_container_executor_configs_&quot; + current_ts, container_executor_properties)
+
+# Restart all services so the new configurations take effect.
+request_id=ambari_helper.restart_all_stale_services()
+if request_id:
+  ambari_helper.wait_for_request_completion(request_id, 600, 60)
+else:
+  print(&quot;Failed to restart all stale services&quot;)
+&lt;/pre&gt;&lt;h3&gt;Verify that &lt;code&gt;container-executor.cfg&lt;/code&gt; is looking good&lt;/h3&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+HDP_VERSION=$(hdp-select status hadoop-yarn-nodemanager | awk &apos;{print $3}&apos;)
+sudo -u yarn /usr/hdp/${HDP_VERSION}/hadoop-yarn/bin/container-executor --checksetup &amp;&amp; echo &quot;Successful!&quot;
+&lt;/pre&gt;&lt;h3&gt;Set up a container image locally on the worker node&lt;/h3&gt;&lt;p&gt;We will use the following as our &lt;code&gt;Dockerfile&lt;/code&gt;&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+FROM adoptopenjdk/openjdk8
+
+RUN apt-get update -qq &gt; /dev/null \
+    # Required for hadoop
+    &amp;&amp; apt install -y libsnappy-dev \
+    # Useful tools for debugging/development
+    &amp;&amp; apt install -y wget vim telnet lsof
+
+# Required to match the user on HDI to the user on the container image
+# These values can be found by running &quot;id &lt;user&gt;&quot; on one of the nodes
+RUN DOCKER_USER=sshuser \
+    &amp;&amp; DOCKER_USER_GROUP=sshuser \
+    &amp;&amp; DOCKER_USER_UID=2020 \
+    &amp;&amp; DOCKER_USER_GID=2020 \
+    &amp;&amp; mkdir -p /home/${DOCKER_USER} \
+    &amp;&amp; groupadd --gid ${DOCKER_USER_GID} ${DOCKER_USER_GROUP} \
+    &amp;&amp; useradd --uid ${DOCKER_USER_UID} --gid ${DOCKER_USER_GID} --shell /bin/bash --home-dir /home/${DOCKER_USER} ${DOCKER_USER} \
+    &amp;&amp; chown ${DOCKER_USER}.${DOCKER_USER_GROUP} /home/${DOCKER_USER}
+&lt;/pre&gt;&lt;p&gt;Now build a container image that we are going to call &lt;code&gt;local/adoptopenjdk8&lt;/code&gt;, in production this could be coming from other repositories that are specifically &lt;code&gt;configured and allowed&lt;/code&gt; in &lt;code&gt;container-executor.cfg&lt;/code&gt; (see above).&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ ls -l adoptopenjdk8/
+total 4
+-rw-rw-r-- 1 sshuser sshuser 643 Feb 17 19:01 Dockerfile
+$ docker build -t local/adoptopenjdk8 adoptopenjdk8/
+&lt;/pre&gt;&lt;p&gt;Verify that local image works&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ docker run -it local/adoptopenjdk8 bash
+&lt;/pre&gt;&lt;h2&gt;Run &lt;code&gt;pi&lt;/code&gt; job from mapreduce examples on the cluster&lt;/h2&gt;&lt;p&gt;Run following from one of the headnodes&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+YARN_JAR=/usr/hdp/current/hadoop-mapreduce-client/hadoop-mapreduce-examples.jar
+DOCKER_IMAGE=local/adoptopenjdk8
+MOUNTS=&quot;/usr/lib/hdinsight-common:/usr/lib/hdinsight-common:ro&quot;
+DOCKER_ENV_VARS=&quot;YARN_CONTAINER_RUNTIME_TYPE=docker,YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=${DOCKER_IMAGE},YARN_CONTAINER_RUNTIME_DOCKER_DELAYED_REMOVAL=true,YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS=${MOUNTS}&quot;
+
+yarn jar ${YARN_JAR} pi \
+    -Dmapreduce.job.maps=1 -Dmapreduce.map.maxattempts=1 -Dmapreduce.map.env=${DOCKER_ENV_VARS} \
+    -Dmapreduce.job.reduces=1 -Dmapreduce.reduce.maxattempts=1 -Dmapreduce.reduce.env=${DOCKER_ENV_VARS} \
+    1 40000
+&lt;/pre&gt;&lt;p&gt;In the end we should see something like below:&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+...
+Number of Maps  = 1
+Samples per Map = 40000
+Wrote input for Map #0
+Starting Job
+23/02/17 19:15:12 INFO client.RequestHedgingRMFailoverProxyProvider: Created wrapped proxy for [rm1, rm2]
+...
+23/02/17 19:15:14 INFO mapreduce.Job: Running job: job_1676659631798_0055
+23/02/17 19:15:32 INFO mapreduce.Job: Job job_1676659631798_0055 running in uber mode : false
+23/02/17 19:15:32 INFO mapreduce.Job:  map 0% reduce 0%
+23/02/17 19:15:39 INFO mapreduce.Job:  map 100% reduce 0%
+23/02/17 19:15:45 INFO mapreduce.Job:  map 100% reduce 100%
+23/02/17 19:15:47 INFO mapreduce.Job: Job job_1676659631798_0055 completed successfully
+23/02/17 19:15:47 INFO mapreduce.Job: Counters: 53
+...
+Estimated value of Pi is 3.14140000000000000000
+&lt;/pre&gt;
+	  </description>
+    </item>
     
     <item>
       <title>Maven: Quick tips</title>

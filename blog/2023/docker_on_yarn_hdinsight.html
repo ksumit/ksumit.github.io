@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head profile="http://www.w3.org/2005/10/profile">
+   <meta charset="utf-8"/>
+    <title>Docker on Yarn on Azure HDInsight</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Personal website of Sumit Kumar IIT Kharagpur">
+    <meta name="author" content="Sumit Kumar">
+    <meta name="keywords" content="Sumit Kumar, IIT Kharagpur, Maths, Computing, Software, BigData, Resume, Website">
+
+    <link rel="icon" 
+      type="image/jpeg" 
+      href="/img/ep.jpg" />
+    <link type="text/css" href="../..//css/style.css" rel="stylesheet">
+    <link type="text/css" href="../..//highlighter/all.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="ruler-top"></div>
+<div id="header">
+<h1>Sumit Kumar</h1>
+<h2>Int. Masters <small>(Dual Degree in Maths &amp; Computing)</small>, IIT Kharagpur</h2>
+</div>
+<p class="spacer"></p>
+<div id="content">
+
+
+	<h1>Docker on Yarn on Azure HDInsight</h1>
+	<h5>Feb 17, 2023</h5>
+	
+<h2>
+ <a href="/tags/devtip.html">devtip</a>
+ , <a href="/tags/docker.html">docker</a>
+ , <a href="/tags/yarn.html">yarn</a>
+ , <a href="/tags/azure.html">azure</a>
+ , <a href="/tags/hdinsight.html">hdinsight</a>
+ 
+</h2>
+
+
+
+
+
+	<p><h1>Using Docker on Yarn support on Azure HDInsight</h1><p>Azure HDInsight uses it's own distribution of open source software (Hadoop, Spark, Hive, Livy etc) that forked from HDP. Though it's mostly based on open source, there are some fine nuances:<br/>1. HDInsight versions don't exactly map to an open source release: HDInsight team picks up a release version from open source, applies it's own private patches and components including some additional commits (for fixes or improvements) from other open source branches to create<br/>a release.<br/>2. HDInsight clusters have HDI specific components that are required for smooth functioning with other Azure services.</p><p>This post covers few tricks for running and debugging Docker based workloads on Yarn on an HDInsight cluster. For this post, we will stick to running <code>pi</code> example that is shipped on the HDInsight clusters but run it inside a docker container.</p><h2>Pre-requisite</h2>
+<ul>
+  <li>Create an HDInsight cluster (Hadoop 3.1.0 or Spark 3.1) with one worker node.</li>
+</ul><p>PS: Keeping it to one worker node gives more control on where the containers get created and that means it's easier to debug should things go wrong.</p><h2>Prepare the cluster for running Docker workload</h2><h3>Install Docker on the worker node.</h3><p>Run following script either using custom script action or by sshing to the node directly as <code>$ sudo bash -x install_docker.sh</code></p>
+<pre name="code" class="brush:bash">
+#!/bin/bash
+# install_docker.sh
+set -e
+
+sudo apt-get -y remove docker docker-engine docker.io containerd runc
+sudo apt-get -y update
+sudo apt-get -y install \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+sudo rm -rf /etc/docker /var/lib/docker /run/docker.sock /etc/systemd/system/docker.service.d
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get -y autoremove
+sudo apt-get -y autoclean
+sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+sudo usermod -aG docker sshuser
+sudo service docker restart
+sudo chmod 666 /var/run/docker.sock
+
+# Verify that we have a working docker setup now.
+docker run hello-world
+</pre><h3>Configure Yarn for running Docker workloads</h3><p>HDInsight ships with a nifty script called <code>AmbariHelper</code> on all the nodes for automating interactions with Ambari. We will use <code>AmbariHelper</code> to configure Yarn in this step by running following python script on one of the headnodes as <code>$ sudo python configure_docker_on_yarn.py</code></p><p><b><font color="red">Copying the following formatted script ends up giving some whitespaces in <code>container-executor.cfg</code>. Before running the python script below, please make sure to remove whitespaces from those empty lines before section headers <code>[docker]</code>, <code>[gpu]</code> and <code>[cgroups]</code> in the script; otherwise <code>container-executor</code> will complain about invalid configuration</font></b></p>
+<pre name="code" class="brush:python">
+# /usr/bin/python
+# configure_docker_on_yarn.py
+import sys
+from datetime import datetime
+from hdinsight_common.AmbariHelper import AmbariHelper
+
+ambari_helper = AmbariHelper()
+current_ts=datetime.today().strftime('%Y_%m_%d_%H_%M_%S')
+
+new_yarn_config = {
+    "yarn.nodemanager.container-executor.class": "org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor",
+    "yarn.nodemanager.linux-container-executor.group": "hadoop",
+    "yarn.nodemanager.linux-container-executor.nonsecure-mode.limit-users": "false",
+    "yarn.nodemanager.runtime.linux.allowed-runtimes": "default,docker",
+    "yarn.nodemanager.runtime.linux.docker.allowed-container-networks": "host,none,bridge",
+    "yarn.nodemanager.runtime.linux.docker.default-container-network": "host",
+    "yarn.nodemanager.runtime.linux.docker.host-pid-namespace.allowed": "false",
+    "yarn.nodemanager.runtime.linux.docker.privileged-containers.allowed": "false",
+    "yarn.nodemanager.runtime.linux.docker.privileged-containers.acl": "",
+    "yarn.nodemanager.runtime.linux.docker.capabilities": "CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE",
+    "yarn.nodemanager.runtime.linux.docker.delayed-removal.allowed": "true",
+    "yarn.nodemanager.delete.debug-delay-sec": "900"
+}
+
+# Apply the configurations to yarn-site
+ambari_helper.update_latest_service_config("yarn-site", "YARN", "update_yarn_site_for_docker_" + current_ts, new_yarn_config)
+
+container_executor_cfg="""
+yarn.nodemanager.local-dirs=/mnt/resource/hadoop/yarn/local
+yarn.nodemanager.log-dirs=/mnt/resource/hadoop/yarn/log
+yarn.nodemanager.linux-container-executor.group=hadoop
+banned.users=hdfs,yarn,mapred,bin
+min.user.id=1000
+
+[docker]
+  module.enabled=true
+  docker.binary=/usr/bin/docker
+  docker.allowed.capabilities=CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE
+  docker.allowed.devices=
+  docker.allowed.networks=host,none,bridge
+  docker.allowed.ro-mounts=/etc/passwd,/etc/group,/mnt/resource/hadoop/yarn/local,/usr/lib/hdinsight-common
+  docker.allowed.rw-mounts=/mnt/resource/hadoop/yarn/local,/mnt/resource/hadoop/yarn/log
+  docker.privileged-containers.enabled=false
+  docker.trusted.registries=local
+  docker.allowed.volume-drivers=
+
+[gpu]
+  module.enabled=false
+
+[cgroups]
+  root=/sys/fs/cgroup
+  yarn-hierarchy=yarn
+"""
+container_executor_properties = {
+    "content": container_executor_cfg
+}
+# Update container-executor.cfg 
+ambari_helper.update_latest_service_config("container-executor", "YARN", "update_container_executor_configs_" + current_ts, container_executor_properties)
+
+# Restart all services so the new configurations take effect.
+request_id=ambari_helper.restart_all_stale_services()
+if request_id:
+  ambari_helper.wait_for_request_completion(request_id, 600, 60)
+else:
+  print("Failed to restart all stale services")
+</pre><h3>Verify that <code>container-executor.cfg</code> is looking good</h3>
+<pre name="code" class="brush:bash">
+HDP_VERSION=$(hdp-select status hadoop-yarn-nodemanager | awk '{print $3}')
+sudo -u yarn /usr/hdp/${HDP_VERSION}/hadoop-yarn/bin/container-executor --checksetup && echo "Successful!"
+</pre><h3>Set up a container image locally on the worker node</h3><p>We will use the following as our <code>Dockerfile</code></p>
+<pre name="code" class="brush:bash">
+FROM adoptopenjdk/openjdk8
+
+RUN apt-get update -qq > /dev/null \
+    # Required for hadoop
+    && apt install -y libsnappy-dev \
+    # Useful tools for debugging/development
+    && apt install -y wget vim telnet lsof
+
+# Required to match the user on HDI to the user on the container image
+# These values can be found by running "id <user>" on one of the nodes
+RUN DOCKER_USER=sshuser \
+    && DOCKER_USER_GROUP=sshuser \
+    && DOCKER_USER_UID=2020 \
+    && DOCKER_USER_GID=2020 \
+    && mkdir -p /home/${DOCKER_USER} \
+    && groupadd --gid ${DOCKER_USER_GID} ${DOCKER_USER_GROUP} \
+    && useradd --uid ${DOCKER_USER_UID} --gid ${DOCKER_USER_GID} --shell /bin/bash --home-dir /home/${DOCKER_USER} ${DOCKER_USER} \
+    && chown ${DOCKER_USER}.${DOCKER_USER_GROUP} /home/${DOCKER_USER}
+</pre><p>Now build a container image that we are going to call <code>local/adoptopenjdk8</code>, in production this could be coming from other repositories that are specifically <code>configured and allowed</code> in <code>container-executor.cfg</code> (see above).</p>
+<pre name="code" class="brush:bash">
+$ ls -l adoptopenjdk8/
+total 4
+-rw-rw-r-- 1 sshuser sshuser 643 Feb 17 19:01 Dockerfile
+$ docker build -t local/adoptopenjdk8 adoptopenjdk8/
+</pre><p>Verify that local image works</p>
+<pre name="code" class="brush:bash">
+$ docker run -it local/adoptopenjdk8 bash
+</pre><h2>Run <code>pi</code> job from mapreduce examples on the cluster</h2><p>Run following from one of the headnodes</p>
+<pre name="code" class="brush:bash">
+YARN_JAR=/usr/hdp/current/hadoop-mapreduce-client/hadoop-mapreduce-examples.jar
+DOCKER_IMAGE=local/adoptopenjdk8
+MOUNTS="/usr/lib/hdinsight-common:/usr/lib/hdinsight-common:ro"
+DOCKER_ENV_VARS="YARN_CONTAINER_RUNTIME_TYPE=docker,YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=${DOCKER_IMAGE},YARN_CONTAINER_RUNTIME_DOCKER_DELAYED_REMOVAL=true,YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS=${MOUNTS}"
+
+yarn jar ${YARN_JAR} pi \
+    -Dmapreduce.job.maps=1 -Dmapreduce.map.maxattempts=1 -Dmapreduce.map.env=${DOCKER_ENV_VARS} \
+    -Dmapreduce.job.reduces=1 -Dmapreduce.reduce.maxattempts=1 -Dmapreduce.reduce.env=${DOCKER_ENV_VARS} \
+    1 40000
+</pre><p>In the end we should see something like below:</p>
+<pre name="code" class="brush:bash">
+...
+Number of Maps  = 1
+Samples per Map = 40000
+Wrote input for Map #0
+Starting Job
+23/02/17 19:15:12 INFO client.RequestHedgingRMFailoverProxyProvider: Created wrapped proxy for [rm1, rm2]
+...
+23/02/17 19:15:14 INFO mapreduce.Job: Running job: job_1676659631798_0055
+23/02/17 19:15:32 INFO mapreduce.Job: Job job_1676659631798_0055 running in uber mode : false
+23/02/17 19:15:32 INFO mapreduce.Job:  map 0% reduce 0%
+23/02/17 19:15:39 INFO mapreduce.Job:  map 100% reduce 0%
+23/02/17 19:15:45 INFO mapreduce.Job:  map 100% reduce 100%
+23/02/17 19:15:47 INFO mapreduce.Job: Job job_1676659631798_0055 completed successfully
+23/02/17 19:15:47 INFO mapreduce.Job: Counters: 53
+...
+Estimated value of Pi is 3.14140000000000000000
+</pre></p>
+</div>
+<table id="linkmenu" align="center" bgcolor="#ffffff" cellpadding="5"
+	cellspacing="1">
+	<tr>
+		<td class="title">Links</td>
+
+<td><a  href="/achievements.html">Awards & recognitions</a></td>
+
+<td><a target="_blank" href="/resume.html">Resume</a></td>
+
+<td><a  href="/personal.html">Personal</a></td>
+
+<td><a  href="/technical.html">Technical</a></td>
+
+<td><a  href="/misc.html">Miscellaneous</a></td>
+
+<td><a href="/blog/index.html">My Blog</a></td>
+
+	</tr>
+</table>
+
+
+<div class="ruler-bottom">&nbsp;</div>
+
+<div id="last-updated">Last Updated: Feb 17 2023</em></div>
+
+<script type="text/javascript" src="/highlighter/all.js">
+</script>
+<script type="text/javascript">
+SyntaxHighlighter.config.stripBrs=true;
+SyntaxHighlighter.all();
+</script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-5V28C6QCZJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-5V28C6QCZJ');
+</script>
+
+</body>
+</html>
+
