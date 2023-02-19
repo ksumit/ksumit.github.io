@@ -41,10 +41,10 @@
 
 
 
-	<p><h1>Using Docker on Yarn support on Azure HDInsight</h1><p>Azure HDInsight uses it's own distribution of open source software (Hadoop, Spark, Hive, Livy etc) that forked from HDP. Though it's mostly based on open source, there are some fine nuances:<br/>1. HDInsight versions don't exactly map to an open source release: HDInsight team picks up a release version from open source, applies it's own private patches and components including some additional commits (for fixes or improvements) from other open source branches to create<br/>a release.<br/>2. HDInsight clusters have HDI specific components that are required for smooth functioning with other Azure services.</p><p>This post covers few tricks for running and debugging Docker based workloads on Yarn on an HDInsight cluster. For this post, we will stick to running <code>pi</code> example that is shipped on the HDInsight clusters but run it inside a docker container.</p><h2>Pre-requisite</h2>
+	<p><p>Azure HDInsight uses it's own distribution of open source software (Hadoop, Spark, Hive, Livy etc) that forked from HDP. Though it's mostly based on open source, there are some fine nuances:<br/>1. HDInsight versions don't exactly map to an open source release: HDInsight team picks up a release version from open source, applies it's own private patches and components including some additional commits (for fixes or improvements) from other open source branches to create<br/>a release.<br/>2. HDInsight clusters have HDI specific components that are required for smooth functioning with other Azure services.</p><p>This post covers few tricks for running Docker based workloads on Yarn on an HDInsight cluster. For this post, we will stick to running <code>pi</code> example that is shipped on the HDInsight clusters but run it inside a docker container.</p><h2>Pre-requisite</h2>
 <ul>
   <li>Create an HDInsight cluster (Hadoop 3.1.0 or Spark 3.1) with one worker node.</li>
-</ul><p>PS: Keeping it to one worker node gives more control on where the containers get created and that means it's easier to debug should things go wrong.</p><h2>Prepare the cluster for running Docker workload</h2><h3>Install Docker on the worker node.</h3><p>Run following script either using custom script action or by sshing to the node directly as <code>$ sudo bash -x install_docker.sh</code></p>
+</ul><p><b>PS:</b> Keeping it to one worker node gives more control on where the containers get created and that means it's easier to debug should things go wrong.</p><p><b>All the steps in this post, can be completed from the workernode itself. First ssh to one of the headnodes and from there ssh to the workernode to follow the steps below</b></p><h2>Prepare the cluster for running Docker workload</h2><h3>Install Docker on the worker node.</h3><p>Run following script either using custom script action or by sshing to the node directly as <code>$ sudo bash -x install_docker.sh</code></p>
 <pre name="code" class="brush:bash">
 #!/bin/bash
 # install_docker.sh
@@ -76,7 +76,7 @@ sudo chmod 666 /var/run/docker.sock
 
 # Verify that we have a working docker setup now.
 docker run hello-world
-</pre><h3>Configure Yarn for running Docker workloads</h3><p>HDInsight ships with a nifty script called <code>AmbariHelper</code> on all the nodes for automating interactions with Ambari. We will use <code>AmbariHelper</code> to configure Yarn in this step by running following python script on one of the headnodes as <code>$ sudo python configure_docker_on_yarn.py</code></p><p><b><font color="red">Copying the following formatted script ends up giving some whitespaces in <code>container-executor.cfg</code>. Before running the python script below, please make sure to remove whitespaces from those empty lines before section headers <code>[docker]</code>, <code>[gpu]</code> and <code>[cgroups]</code> in the script; otherwise <code>container-executor</code> will complain about invalid configuration</font></b></p>
+</pre><h3>Configure Yarn for running Docker workloads</h3><p>HDInsight ships with a nifty script called <code>AmbariHelper</code> on all the nodes for automating interactions with Ambari. We will use <code>AmbariHelper</code> to configure Yarn in this step by running following python script as <code>$ sudo python configure_docker_on_yarn.py</code></p><p><b><font color="red">Copying the following formatted script ends up giving some whitespaces in <code>container-executor.cfg</code>. Before running the python script below, please make sure to remove whitespaces from those empty lines before section headers <code>[docker]</code>, <code>[gpu]</code> and <code>[cgroups]</code> in the script; otherwise <code>container-executor</code> will complain about invalid configuration</font></b></p>
 <pre name="code" class="brush:python">
 # /usr/bin/python
 # configure_docker_on_yarn.py
@@ -158,7 +158,7 @@ RUN apt-get update -qq > /dev/null \
     && apt install -y wget vim telnet lsof
 
 # Required to match the user on HDI to the user on the container image
-# These values can be found by running "id <user>" on one of the nodes
+# These values can be found by running "id" on one of the nodes
 RUN DOCKER_USER=sshuser \
     && DOCKER_USER_GROUP=sshuser \
     && DOCKER_USER_UID=2020 \
@@ -175,8 +175,8 @@ total 4
 $ docker build -t local/adoptopenjdk8 adoptopenjdk8/
 </pre><p>Verify that local image works</p>
 <pre name="code" class="brush:bash">
-$ docker run -it local/adoptopenjdk8 bash
-</pre><h2>Run <code>pi</code> job from mapreduce examples on the cluster</h2><p>Run following from one of the headnodes</p>
+$ docker run -it local/adoptopenjdk8 bash -c "java -version"
+</pre><h2>Run <code>pi</code> job from mapreduce examples on the cluster</h2><p>Run following:</p>
 <pre name="code" class="brush:bash">
 YARN_JAR=/usr/hdp/current/hadoop-mapreduce-client/hadoop-mapreduce-examples.jar
 DOCKER_IMAGE=local/adoptopenjdk8
@@ -205,7 +205,7 @@ Starting Job
 23/02/17 19:15:47 INFO mapreduce.Job: Counters: 53
 ...
 Estimated value of Pi is 3.14140000000000000000
-</pre></p>
+</pre><p>In this post, we ran a simple pi job on docker containers on yarn. </p></p>
 </div>
 <table id="linkmenu" align="center" bgcolor="#ffffff" cellpadding="5"
 	cellspacing="1">

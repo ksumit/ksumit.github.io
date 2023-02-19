@@ -1,25 +1,25 @@
 <?xml version="1.0"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>JBake</title>
-    <link>http://www.sumitkumar.in</link>
-    <atom:link href="http://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
+    <title>Sumit Kumar: My Blog Feed</title>
+    <link>https://www.sumitkumar.in</link>
+    <atom:link href="https://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-US</language>
-    <pubDate>Fri, 17 Feb 2023 11:41:48 -0800</pubDate>
-    <lastBuildDate>Fri, 17 Feb 2023 11:41:48 -0800</lastBuildDate>
+    <pubDate>Sat, 18 Feb 2023 20:43:23 -0800</pubDate>
+    <lastBuildDate>Sat, 18 Feb 2023 20:43:23 -0800</lastBuildDate>
 
     
     <item>
-      <title>Docker on Yarn on Azure HDInsight</title>
-      <link>http://www.sumitkumar.in/blog/2023/docker_on_yarn_hdinsight.html</link>
-      <pubDate>Fri, 17 Feb 2023 00:00:00 -0800</pubDate>
-      <guid isPermaLink="false">blog/2023/docker_on_yarn_hdinsight.html</guid>
+      <title>Spark on Docker on Yarn on Azure HDInsight</title>
+      <link>https://www.sumitkumar.in/blog/2023/spark_on_docker_on_yarn_hdinsight.html</link>
+      <pubDate>Sat, 18 Feb 2023 00:00:00 -0800</pubDate>
+      <guid isPermaLink="false">blog/2023/spark_on_docker_on_yarn_hdinsight.html</guid>
       <description>
-      &lt;h1&gt;Using Docker on Yarn support on Azure HDInsight&lt;/h1&gt;&lt;p&gt;Azure HDInsight uses it&apos;s own distribution of open source software (Hadoop, Spark, Hive, Livy etc) that forked from HDP. Though it&apos;s mostly based on open source, there are some fine nuances:&lt;br/&gt;1. HDInsight versions don&apos;t exactly map to an open source release: HDInsight team picks up a release version from open source, applies it&apos;s own private patches and components including some additional commits (for fixes or improvements) from other open source branches to create&lt;br/&gt;a release.&lt;br/&gt;2. HDInsight clusters have HDI specific components that are required for smooth functioning with other Azure services.&lt;/p&gt;&lt;p&gt;This post covers few tricks for running and debugging Docker based workloads on Yarn on an HDInsight cluster. For this post, we will stick to running &lt;code&gt;pi&lt;/code&gt; example that is shipped on the HDInsight clusters but run it inside a docker container.&lt;/p&gt;&lt;h2&gt;Pre-requisite&lt;/h2&gt;
+      &lt;p&gt;&lt;b&gt;This post builds on &lt;a href=&quot;docker_on_yarn_hdinsight.html&quot;&gt;Docker on Yarn on Azure HDInsight&lt;/a&gt; and covers tricks to run Spark workloads on Docker on Yarn on Azure HDInsight&lt;/b&gt;&lt;/p&gt;&lt;p&gt;We will first run &lt;code&gt;pi&lt;/code&gt; example on Spark followed by a sample &lt;code&gt;numpy&lt;/code&gt; script inside docker containers.&lt;/p&gt;&lt;h2&gt;Pre-requisite&lt;/h2&gt;
 &lt;ul&gt;
-  &lt;li&gt;Create an HDInsight cluster (Hadoop 3.1.0 or Spark 3.1) with one worker node.&lt;/li&gt;
-&lt;/ul&gt;&lt;p&gt;PS: Keeping it to one worker node gives more control on where the containers get created and that means it&apos;s easier to debug should things go wrong.&lt;/p&gt;&lt;h2&gt;Prepare the cluster for running Docker workload&lt;/h2&gt;&lt;h3&gt;Install Docker on the worker node.&lt;/h3&gt;&lt;p&gt;Run following script either using custom script action or by sshing to the node directly as &lt;code&gt;$ sudo bash -x install_docker.sh&lt;/code&gt;&lt;/p&gt;
+  &lt;li&gt;Create an HDInsight cluster (Spark 3.1) and one worker node.&lt;/li&gt;
+&lt;/ul&gt;&lt;p&gt;&lt;b&gt;PS:&lt;/b&gt; Keeping it to one worker node gives more control on where the containers get created and that means it&apos;s easier to debug should things go wrong.&lt;/p&gt;&lt;p&gt;&lt;b&gt;All the steps in this post, can be completed from the workernode itself. First ssh to one of the headnodes and from there ssh to the workernode to follow the steps below&lt;/b&gt;&lt;/p&gt;&lt;h2&gt;Prepare the cluster for running Docker workload&lt;/h2&gt;&lt;h3&gt;Install Docker on the worker node.&lt;/h3&gt;&lt;p&gt;Run following script either using custom script action or by sshing to the node directly as &lt;code&gt;$ sudo bash -x install_docker.sh&lt;/code&gt;&lt;/p&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
 #!/bin/bash
 # install_docker.sh
@@ -51,7 +51,323 @@ sudo chmod 666 /var/run/docker.sock
 
 # Verify that we have a working docker setup now.
 docker run hello-world
-&lt;/pre&gt;&lt;h3&gt;Configure Yarn for running Docker workloads&lt;/h3&gt;&lt;p&gt;HDInsight ships with a nifty script called &lt;code&gt;AmbariHelper&lt;/code&gt; on all the nodes for automating interactions with Ambari. We will use &lt;code&gt;AmbariHelper&lt;/code&gt; to configure Yarn in this step by running following python script on one of the headnodes as &lt;code&gt;$ sudo python configure_docker_on_yarn.py&lt;/code&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;font color=&quot;red&quot;&gt;Copying the following formatted script ends up giving some whitespaces in &lt;code&gt;container-executor.cfg&lt;/code&gt;. Before running the python script below, please make sure to remove whitespaces from those empty lines before section headers &lt;code&gt;[docker]&lt;/code&gt;, &lt;code&gt;[gpu]&lt;/code&gt; and &lt;code&gt;[cgroups]&lt;/code&gt; in the script; otherwise &lt;code&gt;container-executor&lt;/code&gt; will complain about invalid configuration&lt;/font&gt;&lt;/b&gt;&lt;/p&gt;
+&lt;/pre&gt;&lt;h3&gt;Configure Yarn for running Docker workloads&lt;/h3&gt;&lt;p&gt;Run following python script as &lt;code&gt;$ sudo python configure_docker_on_yarn.py&lt;/code&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;font color=&quot;red&quot;&gt;Copying the following formatted script ends up giving some whitespaces in &lt;code&gt;container-executor.cfg&lt;/code&gt;. Before running the python script below, please make sure to remove whitespaces from those empty lines before section headers &lt;code&gt;[docker]&lt;/code&gt;, &lt;code&gt;[gpu]&lt;/code&gt; and &lt;code&gt;[cgroups]&lt;/code&gt; in the script; otherwise &lt;code&gt;container-executor&lt;/code&gt; will complain about invalid configuration&lt;/font&gt;&lt;/b&gt;&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:python&quot;&gt;
+# /usr/bin/python
+# configure_docker_on_yarn.py
+import sys
+import subprocess
+from datetime import datetime
+from hdinsight_common.AmbariHelper import AmbariHelper
+
+ambari_helper = AmbariHelper()
+current_ts=datetime.today().strftime(&apos;%Y_%m_%d_%H_%M_%S&apos;)
+hdp_version=subprocess.check_output([&quot;/usr/bin/hdp-select&quot;, &quot;status&quot;, &quot;spark3-client&quot;]).split(&quot;-&quot;)[2].strip()
+
+new_yarn_config = {
+    &quot;yarn.nodemanager.container-executor.class&quot;: &quot;org.apache.hadoop.yarn.server.nodemanager.LinuxContainerExecutor&quot;,
+    &quot;yarn.nodemanager.linux-container-executor.group&quot;: &quot;hadoop&quot;,
+    &quot;yarn.nodemanager.linux-container-executor.nonsecure-mode.limit-users&quot;: &quot;false&quot;,
+    &quot;yarn.nodemanager.runtime.linux.allowed-runtimes&quot;: &quot;default,docker&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.allowed-container-networks&quot;: &quot;host,none,bridge&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.default-container-network&quot;: &quot;host&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.host-pid-namespace.allowed&quot;: &quot;false&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.privileged-containers.allowed&quot;: &quot;false&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.privileged-containers.acl&quot;: &quot;&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.capabilities&quot;: &quot;CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE&quot;,
+    &quot;yarn.nodemanager.runtime.linux.docker.delayed-removal.allowed&quot;: &quot;true&quot;,
+    &quot;yarn.nodemanager.delete.debug-delay-sec&quot;: &quot;900&quot;
+}
+
+# Apply the configurations to yarn-site
+ambari_helper.update_latest_service_config(&quot;yarn-site&quot;, &quot;YARN&quot;, &quot;update_yarn_site_for_docker_&quot; + current_ts, new_yarn_config)
+
+container_executor_cfg=&quot;&quot;&quot;
+yarn.nodemanager.local-dirs=/mnt/resource/hadoop/yarn/local
+yarn.nodemanager.log-dirs=/mnt/resource/hadoop/yarn/log
+yarn.nodemanager.linux-container-executor.group=hadoop
+banned.users=hdfs,yarn,mapred,bin
+min.user.id=1000
+
+[docker]
+  module.enabled=true
+  docker.binary=/usr/bin/docker
+  docker.allowed.capabilities=CHOWN,DAC_OVERRIDE,FSETID,FOWNER,MKNOD,NET_RAW,SETGID,SETUID,SETFCAP,SETPCAP,NET_BIND_SERVICE,SYS_CHROOT,KILL,AUDIT_WRITE
+  docker.allowed.devices=
+  docker.allowed.networks=host,none,bridge
+  docker.allowed.ro-mounts=/etc/passwd,/etc/group,/etc/hadoop/conf,/mnt/resource/hadoop/yarn/local,/usr/lib/hdinsight-common,/usr/lib/hdinsight-spark,/usr/lib/hdinsight-logging,/usr/hdp/{}/spark3/jars
+  docker.allowed.rw-mounts=/mnt/resource/hadoop/yarn/local,/mnt/resource/hadoop/yarn/log
+  docker.privileged-containers.enabled=false
+  docker.trusted.registries=local
+  docker.allowed.volume-drivers=
+
+[gpu]
+  module.enabled=false
+
+[cgroups]
+  root=/sys/fs/cgroup
+  yarn-hierarchy=yarn
+&quot;&quot;&quot;.format(hdp_version)
+container_executor_properties = {
+    &quot;content&quot;: container_executor_cfg
+}
+# Update container-executor.cfg 
+ambari_helper.update_latest_service_config(&quot;container-executor&quot;, &quot;YARN&quot;, &quot;update_container_executor_configs_&quot; + current_ts, container_executor_properties)
+
+# Restart all services so the new configurations take effect.
+request_id=ambari_helper.restart_all_stale_services()
+if request_id:
+  ambari_helper.wait_for_request_completion(request_id, 600, 60)
+else:
+  print(&quot;Failed to restart all stale services&quot;)
+&lt;/pre&gt;&lt;h3&gt;Verify that &lt;code&gt;container-executor.cfg&lt;/code&gt; is looking good&lt;/h3&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+HDP_VERSION=$(hdp-select status hadoop-yarn-nodemanager | awk &apos;{print $3}&apos;)
+sudo -u yarn /usr/hdp/${HDP_VERSION}/hadoop-yarn/bin/container-executor --checksetup &amp;&amp; echo &quot;Successful!&quot;
+&lt;/pre&gt;&lt;h3&gt;Set up a container image locally on the worker node&lt;/h3&gt;&lt;p&gt;We will use the following as our &lt;code&gt;Dockerfile&lt;/code&gt;&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+FROM adoptopenjdk/openjdk8
+
+RUN apt-get update -qq &gt; /dev/null \
+    # Required for hadoop
+    &amp;&amp; apt install -y libsnappy-dev \
+    # Useful tools for debugging/development
+    &amp;&amp; apt install -y wget vim telnet lsof
+
+# Python 2 is needed for some utility scripts on HDInsight clusters
+RUN apt install python python-dev -y \
+    &amp;&amp; curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py \
+    &amp;&amp; python get-pip.py \
+    &amp;&amp; python -V \
+    &amp;&amp; pip install virtualenv \
+    &amp;&amp; pip install --upgrade pip
+
+RUN apt install python3 python3-dev python3-pip python3-virtualenv -y \
+    &amp;&amp; python3 -V \
+    &amp;&amp; pip3 install --upgrade pip
+
+# Default to python3 since python2 has been completely removed from latest Ubuntu release and is not recommended for any new development
+ENV PYSPARK_DRIVER_PYTHON python3
+ENV PYSPARK_PYTHON python3
+
+RUN pip3 install numpy pandas \
+    &amp;&amp; python3 -c &quot;import numpy as np&quot;
+&lt;/pre&gt;&lt;p&gt;Now build a container image that we are going to call &lt;code&gt;local/pyspark&lt;/code&gt;, in production this could be coming from other repositories that are specifically &lt;code&gt;configured and allowed&lt;/code&gt; in &lt;code&gt;container-executor.cfg&lt;/code&gt; (see above).&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ ls -l pyspark/
+total 4
+-rw-rw-r-- 1 sshuser sshuser 478 Feb 18 02:03 Dockerfile
+$ docker build -t local/pyspark pyspark/
+&lt;/pre&gt;&lt;p&gt;Verify that local image works&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+$ docker run -it local/pyspark bash -c &quot;(java -version &amp;&amp; python -V &amp;&amp; python3 -V)&quot;
+&lt;/pre&gt;&lt;h2&gt;Run &lt;code&gt;pi&lt;/code&gt; spark job on the cluster&lt;/h2&gt;&lt;p&gt;Run following:&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+PYSPARK_IMAGE=local/pyspark
+SPARK_EXAMPLES_JAR=/usr/hdp/current/spark3-client/examples/jars/spark-examples.jar
+HDP_VERSION=$(hdp-select status spark3-client | awk &apos;{print $3}&apos;)
+SPARK_JARS_PATH=/usr/hdp/${HDP_VERSION}/spark3/jars
+SPARK_CUSTOM_JARS_PATH=/usr/lib/hdinsight-spark
+HDI_LOGGING=/usr/lib/hdinsight-logging
+HDI_COMMON=/usr/lib/hdinsight-common
+HADOOP_CONF_DIR=/etc/hadoop/conf
+CUSTOM_CLASSPATH=&quot;${SPARK_JARS_PATH}/*:${SPARK_CUSTOM_JARS_PATH}/*:${HDI_LOGGING}/*&quot;
+MOUNTS=&quot;/etc/passwd:/etc/passwd:ro,/etc/group:/etc/group:ro,${HADOOP_CONF_DIR}:${HADOOP_CONF_DIR}:ro,${HDI_COMMON}:${HDI_COMMON}:ro,${HDI_LOGGING}:${HDI_LOGGING}:ro,${SPARK_JARS_PATH}:${SPARK_JARS_PATH}:ro,${SPARK_CUSTOM_JARS_PATH}:${SPARK_CUSTOM_JARS_PATH}:ro&quot;
+
+spark-submit --class org.apache.spark.examples.SparkPi \
+    --master yarn --deploy-mode cluster --num-executors 1 \
+    --driver-memory 2g --executor-memory 1g --executor-cores 2 \
+    --conf &quot;spark.driver.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf &quot;spark.executor.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf &quot;spark.yarn.am.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_TYPE=docker \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=${PYSPARK_IMAGE} \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS=${MOUNTS} \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_DELAYED_REMOVAL=true \
+    --conf spark.executor.extraClassPath=&quot;${CUSTOM_CLASSPATH}&quot; \
+    --conf spark.driver.extraClassPath=&quot;${CUSTOM_CLASSPATH}&quot; \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_TYPE=docker \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=${PYSPARK_IMAGE} \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS=${MOUNTS} \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_DELAYED_REMOVAL=true \
+    ${SPARK_EXAMPLES_JAR} 10
+&lt;/pre&gt;&lt;p&gt;In the end we should see something like below:&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+...
+...
+23/02/19 03:36:44 INFO Client [main]: Application report for application_1676773095123_0019 (state: RUNNING)
+23/02/19 03:36:45 INFO Client [main]: Application report for application_1676773095123_0019 (state: RUNNING)
+23/02/19 03:36:46 INFO Client [main]: Application report for application_1676773095123_0019 (state: RUNNING)
+23/02/19 03:36:47 INFO Client [main]: Application report for application_1676773095123_0019 (state: RUNNING)
+23/02/19 03:36:48 INFO Client [main]: Application report for application_1676773095123_0019 (state: RUNNING)
+23/02/19 03:36:49 INFO Client [main]: Application report for application_1676773095123_0019 (state: RUNNING)
+23/02/19 03:36:50 INFO Client [main]: Application report for application_1676773095123_0019 (state: RUNNING)
+23/02/19 03:36:51 INFO Client [main]: Application report for application_1676773095123_0019 (state: FINISHED)
+...
+&lt;/pre&gt;&lt;p&gt;The output is available in stdout for the application and can be seen on Yarn UI by going to &lt;a href=&quot;https://[clustername].azurehdinsight.net/yarnui&quot;&gt;https://[clustername].azurehdinsight.net/yarnui&lt;/a&gt; (example below):&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+Log Type: stdout
+Log Upload Time: Sun Feb 19 03:36:52 +0000 2023
+Log Length: 33
+
+Pi is roughly 3.1445191445191445
+&lt;/pre&gt;&lt;p&gt;Next we are going to run a simple numpy job. We already installed numpy on our &lt;code&gt;local/pyspark&lt;/code&gt; container image, so we don&apos;t need anything additional here. First create the sample script:&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:python&quot;&gt;
+# numpy_example.py
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.appName(&quot;numpy_example&quot;).getOrCreate()
+sc = spark.sparkContext
+
+import numpy as np
+from numpy import random
+
+arr = np.arange(15).reshape(3, 5)
+print(&quot;Original array: &quot;, arr)
+random.shuffle(arr)
+print(&quot;Array after shuffling: &quot;, arr)
+&lt;/pre&gt;&lt;p&gt;Now run the following (output will again be available on stdout for the application on Yarn UI):&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+PYSPARK_IMAGE=local/pyspark
+SPARK_EXAMPLES_JAR=/usr/hdp/current/spark3-client/examples/jars/spark-examples.jar
+HDP_VERSION=$(hdp-select status spark3-client | awk &apos;{print $3}&apos;)
+SPARK_JARS_PATH=/usr/hdp/${HDP_VERSION}/spark3/jars
+SPARK_CUSTOM_JARS_PATH=/usr/lib/hdinsight-spark
+HDI_LOGGING=/usr/lib/hdinsight-logging
+HDI_COMMON=/usr/lib/hdinsight-common
+HADOOP_CONF_DIR=/etc/hadoop/conf
+CUSTOM_CLASSPATH=&quot;${SPARK_JARS_PATH}/*:${SPARK_CUSTOM_JARS_PATH}/*:${HDI_LOGGING}/*&quot;
+MOUNTS=&quot;/etc/passwd:/etc/passwd:ro,/etc/group:/etc/group:ro,${HADOOP_CONF_DIR}:${HADOOP_CONF_DIR}:ro,${HDI_COMMON}:${HDI_COMMON}:ro,${HDI_LOGGING}:${HDI_LOGGING}:ro,${SPARK_JARS_PATH}:${SPARK_JARS_PATH}:ro,${SPARK_CUSTOM_JARS_PATH}:${SPARK_CUSTOM_JARS_PATH}:ro&quot;
+
+spark-submit --master yarn --deploy-mode cluster --num-executors 1 \
+    --driver-memory 2g --executor-memory 1g --executor-cores 2 \
+    --conf &quot;spark.driver.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf &quot;spark.executor.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf &quot;spark.yarn.am.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_TYPE=docker \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=${PYSPARK_IMAGE} \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS=${MOUNTS} \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_DELAYED_REMOVAL=true \
+    --conf spark.executor.extraClassPath=&quot;${CUSTOM_CLASSPATH}&quot; \
+    --conf spark.driver.extraClassPath=&quot;${CUSTOM_CLASSPATH}&quot; \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_TYPE=docker \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=${PYSPARK_IMAGE} \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS=${MOUNTS} \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_DELAYED_REMOVAL=true \
+    numpy_example.py
+&lt;/pre&gt;&lt;p&gt;The output should look something like below in stdout on YarnUI:&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+Log Type: stdout
+Log Upload Time: Sun Feb 19 04:37:08 +0000 2023
+Log Length: 151
+
+Original array:  [[ 0  1  2  3  4]
+ [ 5  6  7  8  9]
+ [10 11 12 13 14]]
+Array after shuffling:  [[ 0  1  2  3  4]
+ [10 11 12 13 14]
+ [ 5  6  7  8  9]]
+&lt;/pre&gt;&lt;p&gt;Similar command to launch &lt;code&gt;spark-shell&lt;/code&gt; will be:&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+PYSPARK_IMAGE=local/pyspark
+SPARK_EXAMPLES_JAR=/usr/hdp/current/spark3-client/examples/jars/spark-examples.jar
+HDP_VERSION=$(hdp-select status spark3-client | awk &apos;{print $3}&apos;)
+SPARK_JARS_PATH=/usr/hdp/${HDP_VERSION}/spark3/jars
+SPARK_CUSTOM_JARS_PATH=/usr/lib/hdinsight-spark
+HDI_LOGGING=/usr/lib/hdinsight-logging
+HDI_COMMON=/usr/lib/hdinsight-common
+HADOOP_CONF_DIR=/etc/hadoop/conf
+CUSTOM_CLASSPATH=&quot;${SPARK_JARS_PATH}/*:${SPARK_CUSTOM_JARS_PATH}/*:${HDI_LOGGING}/*&quot;
+MOUNTS=&quot;/etc/passwd:/etc/passwd:ro,/etc/group:/etc/group:ro,${HADOOP_CONF_DIR}:${HADOOP_CONF_DIR}:ro,${HDI_COMMON}:${HDI_COMMON}:ro,${HDI_LOGGING}:${HDI_LOGGING}:ro,${SPARK_JARS_PATH}:${SPARK_JARS_PATH}:ro,${SPARK_CUSTOM_JARS_PATH}:${SPARK_CUSTOM_JARS_PATH}:ro&quot;
+
+spark-shell --master yarn --num-executors 1 \
+    --driver-memory 2g --executor-memory 1g --executor-cores 2 \
+    --conf &quot;spark.driver.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf &quot;spark.executor.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf &quot;spark.yarn.am.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_TYPE=docker \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=${PYSPARK_IMAGE} \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS=${MOUNTS} \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_DELAYED_REMOVAL=true \
+    --conf spark.executor.extraClassPath=&quot;${CUSTOM_CLASSPATH}&quot; \
+    --conf spark.driver.extraClassPath=&quot;${CUSTOM_CLASSPATH}&quot; \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_TYPE=docker \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=${PYSPARK_IMAGE} \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS=${MOUNTS} \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_DELAYED_REMOVAL=true
+&lt;/pre&gt;&lt;p&gt;And for &lt;code&gt;pyspark&lt;/code&gt; will be:&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+PYSPARK_IMAGE=local/pyspark
+SPARK_EXAMPLES_JAR=/usr/hdp/current/spark3-client/examples/jars/spark-examples.jar
+HDP_VERSION=$(hdp-select status spark3-client | awk &apos;{print $3}&apos;)
+SPARK_JARS_PATH=/usr/hdp/${HDP_VERSION}/spark3/jars
+SPARK_CUSTOM_JARS_PATH=/usr/lib/hdinsight-spark
+HDI_LOGGING=/usr/lib/hdinsight-logging
+HDI_COMMON=/usr/lib/hdinsight-common
+HADOOP_CONF_DIR=/etc/hadoop/conf
+CUSTOM_CLASSPATH=&quot;${SPARK_JARS_PATH}/*:${SPARK_CUSTOM_JARS_PATH}/*:${HDI_LOGGING}/*&quot;
+MOUNTS=&quot;/etc/passwd:/etc/passwd:ro,/etc/group:/etc/group:ro,${HADOOP_CONF_DIR}:${HADOOP_CONF_DIR}:ro,${HDI_COMMON}:${HDI_COMMON}:ro,${HDI_LOGGING}:${HDI_LOGGING}:ro,${SPARK_JARS_PATH}:${SPARK_JARS_PATH}:ro,${SPARK_CUSTOM_JARS_PATH}:${SPARK_CUSTOM_JARS_PATH}:ro&quot;
+
+pyspark --master yarn --num-executors 1 \
+    --driver-memory 2g --executor-memory 1g --executor-cores 2 \
+    --conf &quot;spark.driver.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf &quot;spark.executor.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf &quot;spark.yarn.am.extraJavaOptions=-Dhdp.version=${HDP_VERSION}&quot; \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_TYPE=docker \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=${PYSPARK_IMAGE} \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS=${MOUNTS} \
+    --conf spark.executorEnv.YARN_CONTAINER_RUNTIME_DOCKER_DELAYED_REMOVAL=true \
+    --conf spark.executor.extraClassPath=&quot;${CUSTOM_CLASSPATH}&quot; \
+    --conf spark.driver.extraClassPath=&quot;${CUSTOM_CLASSPATH}&quot; \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_TYPE=docker \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_IMAGE=${PYSPARK_IMAGE} \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS=${MOUNTS} \
+    --conf spark.yarn.appMasterEnv.YARN_CONTAINER_RUNTIME_DOCKER_DELAYED_REMOVAL=true
+&lt;/pre&gt;&lt;p&gt;In this post, we ran Spark &lt;code&gt;pi&lt;/code&gt; job and a simple &lt;code&gt;numpy&lt;/code&gt; script on docker containers on yarn. We also ran &lt;code&gt;spark-shell&lt;/code&gt; and &lt;code&gt;pyspark&lt;/code&gt; that would run driver and executors on docker containers. Running the shells can be very helpful in debugging container issues because the containers don&apos;t exit even on job failure and that means we can run &lt;code&gt;$ docker exec -it [container_name] bash&lt;/code&gt; to attach a shell to the running container.&lt;/p&gt;
+	  </description>
+    </item>
+    
+    <item>
+      <title>Docker on Yarn on Azure HDInsight</title>
+      <link>https://www.sumitkumar.in/blog/2023/docker_on_yarn_hdinsight.html</link>
+      <pubDate>Fri, 17 Feb 2023 00:00:00 -0800</pubDate>
+      <guid isPermaLink="false">blog/2023/docker_on_yarn_hdinsight.html</guid>
+      <description>
+      &lt;p&gt;Azure HDInsight uses it&apos;s own distribution of open source software (Hadoop, Spark, Hive, Livy etc) that forked from HDP. Though it&apos;s mostly based on open source, there are some fine nuances:&lt;br/&gt;1. HDInsight versions don&apos;t exactly map to an open source release: HDInsight team picks up a release version from open source, applies it&apos;s own private patches and components including some additional commits (for fixes or improvements) from other open source branches to create&lt;br/&gt;a release.&lt;br/&gt;2. HDInsight clusters have HDI specific components that are required for smooth functioning with other Azure services.&lt;/p&gt;&lt;p&gt;This post covers few tricks for running Docker based workloads on Yarn on an HDInsight cluster. For this post, we will stick to running &lt;code&gt;pi&lt;/code&gt; example that is shipped on the HDInsight clusters but run it inside a docker container.&lt;/p&gt;&lt;h2&gt;Pre-requisite&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Create an HDInsight cluster (Hadoop 3.1.0 or Spark 3.1) with one worker node.&lt;/li&gt;
+&lt;/ul&gt;&lt;p&gt;&lt;b&gt;PS:&lt;/b&gt; Keeping it to one worker node gives more control on where the containers get created and that means it&apos;s easier to debug should things go wrong.&lt;/p&gt;&lt;p&gt;&lt;b&gt;All the steps in this post, can be completed from the workernode itself. First ssh to one of the headnodes and from there ssh to the workernode to follow the steps below&lt;/b&gt;&lt;/p&gt;&lt;h2&gt;Prepare the cluster for running Docker workload&lt;/h2&gt;&lt;h3&gt;Install Docker on the worker node.&lt;/h3&gt;&lt;p&gt;Run following script either using custom script action or by sshing to the node directly as &lt;code&gt;$ sudo bash -x install_docker.sh&lt;/code&gt;&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+#!/bin/bash
+# install_docker.sh
+set -e
+
+sudo apt-get -y remove docker docker-engine docker.io containerd runc
+sudo apt-get -y update
+sudo apt-get -y install \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+sudo rm -rf /etc/docker /var/lib/docker /run/docker.sock /etc/systemd/system/docker.service.d
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+echo \
+  &quot;deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable&quot; | sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+
+sudo apt-get update
+sudo apt-get -y autoremove
+sudo apt-get -y autoclean
+sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+sudo usermod -aG docker sshuser
+sudo service docker restart
+sudo chmod 666 /var/run/docker.sock
+
+# Verify that we have a working docker setup now.
+docker run hello-world
+&lt;/pre&gt;&lt;h3&gt;Configure Yarn for running Docker workloads&lt;/h3&gt;&lt;p&gt;HDInsight ships with a nifty script called &lt;code&gt;AmbariHelper&lt;/code&gt; on all the nodes for automating interactions with Ambari. We will use &lt;code&gt;AmbariHelper&lt;/code&gt; to configure Yarn in this step by running following python script as &lt;code&gt;$ sudo python configure_docker_on_yarn.py&lt;/code&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;&lt;font color=&quot;red&quot;&gt;Copying the following formatted script ends up giving some whitespaces in &lt;code&gt;container-executor.cfg&lt;/code&gt;. Before running the python script below, please make sure to remove whitespaces from those empty lines before section headers &lt;code&gt;[docker]&lt;/code&gt;, &lt;code&gt;[gpu]&lt;/code&gt; and &lt;code&gt;[cgroups]&lt;/code&gt; in the script; otherwise &lt;code&gt;container-executor&lt;/code&gt; will complain about invalid configuration&lt;/font&gt;&lt;/b&gt;&lt;/p&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:python&quot;&gt;
 # /usr/bin/python
 # configure_docker_on_yarn.py
@@ -133,7 +449,7 @@ RUN apt-get update -qq &gt; /dev/null \
     &amp;&amp; apt install -y wget vim telnet lsof
 
 # Required to match the user on HDI to the user on the container image
-# These values can be found by running &quot;id &lt;user&gt;&quot; on one of the nodes
+# These values can be found by running &quot;id&quot; on one of the nodes
 RUN DOCKER_USER=sshuser \
     &amp;&amp; DOCKER_USER_GROUP=sshuser \
     &amp;&amp; DOCKER_USER_UID=2020 \
@@ -150,8 +466,8 @@ total 4
 $ docker build -t local/adoptopenjdk8 adoptopenjdk8/
 &lt;/pre&gt;&lt;p&gt;Verify that local image works&lt;/p&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
-$ docker run -it local/adoptopenjdk8 bash
-&lt;/pre&gt;&lt;h2&gt;Run &lt;code&gt;pi&lt;/code&gt; job from mapreduce examples on the cluster&lt;/h2&gt;&lt;p&gt;Run following from one of the headnodes&lt;/p&gt;
+$ docker run -it local/adoptopenjdk8 bash -c &quot;java -version&quot;
+&lt;/pre&gt;&lt;h2&gt;Run &lt;code&gt;pi&lt;/code&gt; job from mapreduce examples on the cluster&lt;/h2&gt;&lt;p&gt;Run following:&lt;/p&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
 YARN_JAR=/usr/hdp/current/hadoop-mapreduce-client/hadoop-mapreduce-examples.jar
 DOCKER_IMAGE=local/adoptopenjdk8
@@ -180,13 +496,13 @@ Starting Job
 23/02/17 19:15:47 INFO mapreduce.Job: Counters: 53
 ...
 Estimated value of Pi is 3.14140000000000000000
-&lt;/pre&gt;
+&lt;/pre&gt;&lt;p&gt;In this post, we ran a simple pi job on docker containers on yarn. &lt;/p&gt;
 	  </description>
     </item>
     
     <item>
       <title>Maven: Quick tips</title>
-      <link>http://www.sumitkumar.in/blog/2023/maven_tips.html</link>
+      <link>https://www.sumitkumar.in/blog/2023/maven_tips.html</link>
       <pubDate>Fri, 10 Feb 2023 00:00:00 -0800</pubDate>
       <guid isPermaLink="false">blog/2023/maven_tips.html</guid>
       <description>
@@ -224,7 +540,7 @@ mvn install -Phive -Pyarn -Phive-thriftserver -pl \!:spark-yarn_2.12,\!:spark-hi
     
     <item>
       <title>Docker: Quick tips</title>
-      <link>http://www.sumitkumar.in/blog/2022/docker_tips.html</link>
+      <link>https://www.sumitkumar.in/blog/2022/docker_tips.html</link>
       <pubDate>Fri, 8 Apr 2022 00:00:00 -0700</pubDate>
       <guid isPermaLink="false">blog/2022/docker_tips.html</guid>
       <description>
@@ -298,7 +614,7 @@ resources:
     
     <item>
       <title>Bash recipes</title>
-      <link>http://www.sumitkumar.in/blog/2016/bash_shell_scripting_tips.html</link>
+      <link>https://www.sumitkumar.in/blog/2016/bash_shell_scripting_tips.html</link>
       <pubDate>Mon, 5 Dec 2016 00:00:00 -0800</pubDate>
       <guid isPermaLink="false">blog/2016/bash_shell_scripting_tips.html</guid>
       <description>
@@ -586,7 +902,7 @@ done
     
     <item>
       <title>Git: quick tips</title>
-      <link>http://www.sumitkumar.in/blog/2015/git_tips.html</link>
+      <link>https://www.sumitkumar.in/blog/2015/git_tips.html</link>
       <pubDate>Mon, 9 Nov 2015 00:00:00 -0800</pubDate>
       <guid isPermaLink="false">blog/2015/git_tips.html</guid>
       <description>
@@ -714,7 +1030,7 @@ $ git config mergetool.prompt false
     
     <item>
       <title>Python: pretty print json</title>
-      <link>http://www.sumitkumar.in/blog/2015/pretty-print-json-shell.html</link>
+      <link>https://www.sumitkumar.in/blog/2015/pretty-print-json-shell.html</link>
       <pubDate>Mon, 9 Nov 2015 00:00:00 -0800</pubDate>
       <guid isPermaLink="false">blog/2015/pretty-print-json-shell.html</guid>
       <description>
@@ -727,7 +1043,7 @@ alias prettyjson=&apos;python -m json.tool&apos;
     
     <item>
       <title>MySQL: drop all tables</title>
-      <link>http://www.sumitkumar.in/blog/2013/mysql-drop-all-tables.html</link>
+      <link>https://www.sumitkumar.in/blog/2013/mysql-drop-all-tables.html</link>
       <pubDate>Sat, 21 Sep 2013 00:00:00 -0700</pubDate>
       <guid isPermaLink="false">blog/2013/mysql-drop-all-tables.html</guid>
       <description>
@@ -741,7 +1057,7 @@ done
     
     <item>
       <title>Eclipse plugins</title>
-      <link>http://www.sumitkumar.in/blog/2013/eclipse-plugins.html</link>
+      <link>https://www.sumitkumar.in/blog/2013/eclipse-plugins.html</link>
       <pubDate>Wed, 21 Aug 2013 00:00:00 -0700</pubDate>
       <guid isPermaLink="false">blog/2013/eclipse-plugins.html</guid>
       <description>
@@ -755,7 +1071,7 @@ done
     
     <item>
       <title>Firefox plugins</title>
-      <link>http://www.sumitkumar.in/blog/2013/firefox-plugins.html</link>
+      <link>https://www.sumitkumar.in/blog/2013/firefox-plugins.html</link>
       <pubDate>Wed, 21 Aug 2013 00:00:00 -0700</pubDate>
       <guid isPermaLink="false">blog/2013/firefox-plugins.html</guid>
       <description>
@@ -776,7 +1092,7 @@ done
     
     <item>
       <title>Thunderbird plugins</title>
-      <link>http://www.sumitkumar.in/blog/2013/thunderbird-plugins.html</link>
+      <link>https://www.sumitkumar.in/blog/2013/thunderbird-plugins.html</link>
       <pubDate>Wed, 21 Aug 2013 00:00:00 -0700</pubDate>
       <guid isPermaLink="false">blog/2013/thunderbird-plugins.html</guid>
       <description>
