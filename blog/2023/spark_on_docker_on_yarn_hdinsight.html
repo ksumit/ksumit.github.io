@@ -150,6 +150,10 @@ else:
 <pre name="code" class="brush:bash">
 HDP_VERSION=$(hdp-select status hadoop-yarn-nodemanager | awk '{print $3}')
 sudo -u yarn /usr/hdp/${HDP_VERSION}/hadoop-yarn/bin/container-executor --checksetup && echo "Successful!"
+</pre><h3>Clean up <code>usercache</code> directory on the workernode</h3><p>This is required so when <code>container-executor</code> runs, it can setup the directory with appropriate permissions that would allow docker containers to mount local paths in <code>ro</code> and <code>rw</code> modes as necessary. This is configured in <code>/etc/hadoop/conf/yarn-site.xml</code> in <code>yarn.nodemanager.local-dirs</code> and defaults to <code>/mnt/resource/hadoop/yarn/local</code>. Example command if the default value is used:</p>
+<pre name="code" class="brush:bash">
+NODEMANAGER_LOCAL_DIR=/mnt/resource/hadoop/yarn/local
+sudo rm -rf ${NODEMANAGER_LOCAL_DIR}/usercache/spark
 </pre><h3>Set up a container image locally on the worker node</h3><p>We will use the following as our <code>Dockerfile</code></p>
 <pre name="code" class="brush:bash">
 FROM adoptopenjdk/openjdk8

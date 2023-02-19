@@ -6,8 +6,8 @@
     <atom:link href="https://www.sumitkumar.in/feed.xml" rel="self" type="application/rss+xml" />
     <description>JBake Bootstrap Template</description>
     <language>en-US</language>
-    <pubDate>Sat, 18 Feb 2023 20:43:23 -0800</pubDate>
-    <lastBuildDate>Sat, 18 Feb 2023 20:43:23 -0800</lastBuildDate>
+    <pubDate>Sun, 19 Feb 2023 10:25:31 -0800</pubDate>
+    <lastBuildDate>Sun, 19 Feb 2023 10:25:31 -0800</lastBuildDate>
 
     
     <item>
@@ -124,6 +124,10 @@ else:
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
 HDP_VERSION=$(hdp-select status hadoop-yarn-nodemanager | awk &apos;{print $3}&apos;)
 sudo -u yarn /usr/hdp/${HDP_VERSION}/hadoop-yarn/bin/container-executor --checksetup &amp;&amp; echo &quot;Successful!&quot;
+&lt;/pre&gt;&lt;h3&gt;Clean up &lt;code&gt;usercache&lt;/code&gt; directory on the workernode&lt;/h3&gt;&lt;p&gt;This is required so when &lt;code&gt;container-executor&lt;/code&gt; runs, it can setup the directory with appropriate permissions that would allow docker containers to mount local paths in &lt;code&gt;ro&lt;/code&gt; and &lt;code&gt;rw&lt;/code&gt; modes as necessary. This is configured in &lt;code&gt;/etc/hadoop/conf/yarn-site.xml&lt;/code&gt; in &lt;code&gt;yarn.nodemanager.local-dirs&lt;/code&gt; and defaults to &lt;code&gt;/mnt/resource/hadoop/yarn/local&lt;/code&gt;. Example command if the default value is used:&lt;/p&gt;
+&lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
+NODEMANAGER_LOCAL_DIR=/mnt/resource/hadoop/yarn/local
+sudo rm -rf ${NODEMANAGER_LOCAL_DIR}/usercache/spark
 &lt;/pre&gt;&lt;h3&gt;Set up a container image locally on the worker node&lt;/h3&gt;&lt;p&gt;We will use the following as our &lt;code&gt;Dockerfile&lt;/code&gt;&lt;/p&gt;
 &lt;pre name=&quot;code&quot; class=&quot;brush:bash&quot;&gt;
 FROM adoptopenjdk/openjdk8
