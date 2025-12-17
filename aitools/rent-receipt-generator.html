@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent Receipt Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Modern Slate & Teal Palette */
+            --bg-app: #f1f5f9;
+            --surface: #ffffff;
+            --primary: #0f766e; /* Teal 700 */
+            --primary-hover: #115e59;
+            --text-main: #1e293b; /* Slate 800 */
+            --text-muted: #64748b; /* Slate 500 */
+            --border: #cbd5e1;
+            --border-light: #e2e8f0;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-app);
+            margin: 0;
+            padding: 40px 20px;
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- INPUT FORM STYLES --- */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--surface);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-main);
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-size: 0.95rem;
+        }
+
+        .section-header {
+            grid-column: span 2;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--primary);
+            font-weight: 700;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 5px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .full-width { grid-column: span 2; }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+        }
+
+        /* Landlord Card Styles */
+        .landlord-list {
+            grid-column: span 2;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .landlord-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .signature-preview-container {
+            grid-column: span 3;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+        }
+
+        .signature-preview-img {
+            max-width: 150px;
+            max-height: 60px;
+            object-fit: contain;
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            padding: 5px;
+            background: white;
+        }
+
+        .signature-preview-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .remove-landlord-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 700px) {
+            .landlord-card { grid-template-columns: 1fr; }
+        }
+
+        /* Dynamic Rent Grid */
+        #rent-breakdown-container {
+            display: none;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
+            margin-top: 10px;
+        }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            font-size: 0.9rem;
+            text-decoration: none;
+            margin-top: 5px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-link:hover { text-decoration: underline; }
+
+        /* Action Buttons */
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        button.main-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(15, 118, 110, 0.2);
+            transition: all 0.2s;
+        }
+
+        button.main-btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button.print-btn {
+            background-color: white;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            display: none;
+        }
+        button.print-btn:hover { background-color: #f8fafc; }
+
+        /* --- RECEIPT PREVIEW --- */
+        #receipt-preview {
+            margin-top: 60px;
+            display: none;
+        }
+
+        .receipt {
+            background: white;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 40px auto;
+            padding: 40px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+            position: relative;
+            border-top: 5px solid var(--primary);
+            /* Flex layout to push footer down */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .receipt-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 15px;
+        }
+
+        .receipt-title h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-main);
+        }
+        .receipt-title span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 4px;
+        }
+
+        .receipt-meta {
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .receipt-meta strong { color: var(--text-main); }
+
+        .receipt-body {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            flex-grow: 1; /* Allows body to expand */
+        }
+
+        .receipt-body strong {
+            font-weight: 600;
+            color: var(--text-main);
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 1px;
+        }
+
+        .property-box {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin: 20px 0;
+            border-left: 3px solid var(--primary);
+        }
+
+        /* Footer Grid */
+        .receipt-footer {
+            margin-top: 10px;
+        }
+
+        .landlord-details-block {
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .landlord-details-block strong { color: var(--text-main); }
+
+        .signatures-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .signature-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            align-self: flex-end;
+        }
+
+        .signature-line {
+            width: 220px;
+            border-top: 1px solid var(--text-main);
+            text-align: center;
+            padding-top: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .signature-image-area {
+            height: 80px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .stamp-box {
+            width: 70px;
+            height: 70px;
+            border: 1px solid var(--border);
+            background-color: #f1f5f9;
+            color: var(--text-muted);
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        /* Image Editor Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: var(--surface);
+            margin: 2% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 15px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .close-btn {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--text-muted);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: var(--text-main);
+        }
+
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .canvas-container {
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f9fafb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            position: relative;
+        }
+
+        #imageCanvas {
+            max-width: 100%;
+            max-height: 400px;
+            cursor: move;
+        }
+
+        .editor-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-editor {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text-main);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-editor:hover {
+            background: var(--bg-app);
+            border-color: var(--primary);
+        }
+
+        .btn-editor.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .btn-cancel {
+            padding: 10px 24px;
+            background: white;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-cancel:hover {
+            background: var(--bg-app);
+        }
+
+        .btn-save {
+            padding: 10px 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-save:hover {
+            background: var(--primary-hover);
+        }
+
+        .signature-preview {
+            max-width: 150px;
+            max-height: 80px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        .signature-img {
+            max-width: 200px;
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        /* Table Styles for Consolidated */
+        .modern-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+        .modern-table th {
+            text-align: left;
+            padding: 12px;
+            background-color: #f8fafc;
+            border-bottom: 2px solid var(--border-light);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+        .modern-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .modern-table tr:last-child td { border-bottom: none; }
+        .modern-table .total-row td {
+            font-weight: 700;
+            border-top: 2px solid var(--border-light);
+            font-size: 1rem;
+        }
+        .text-right { text-align: right; }
+
+        /* --- PRINT STYLES (ADJUSTED FOR 2 PER PAGE) --- */
+        @media print {
+            body { background: white; padding: 0; }
+            .container, .btn-container { display: none !important; }
+            #receipt-preview { display: block !important; margin-top: 0; }
+
+            .receipt {
+                border: none;
+                box-shadow: none;
+                width: 100%;
+                max-width: 100%;
+                /* A4 is ~297mm high.
+                   We want 2 receipts.
+                   135mm height allows safe margin space.
+                */
+                min-height: 130mm;
+                padding: 30px 50px; /* Generous padding for professional look */
+                page-break-inside: avoid;
+            }
+
+            /* Separator between two receipts on the same page */
+            .receipt.monthly-item {
+                margin-bottom: 0;
+            }
+
+            /* Every ODD receipt (1st, 3rd) gets a cut line */
+            .receipt.monthly-item:nth-child(2n-1) {
+                border-bottom: 1px dashed #ccc;
+            }
+
+            /* Every EVEN receipt (2nd, 4th) triggers a page break */
+            .receipt.monthly-item:nth-child(2n) {
+                page-break-after: always;
+                border-bottom: none;
+            }
+
+            .receipt.consolidated-item {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="input-form">
+    <h1>Rent Receipt Generator</h1>
+    <div class="subtitle">Generate clean, compliant receipts for Indian Income Tax purposes</div>
+
+    <div class="form-grid">
+
+        <div class="section-header">1. Period & Tenant</div>
+
+        <div class="full-width">
+            <label>Tenant Name</label>
+            <input type="text" id="tenantName" placeholder="e.g. Rahul Sharma">
+        </div>
+
+        <div>
+            <label>Start Month</label>
+            <input type="month" id="startMonth" onchange="handleDateChange()" inputmode="numeric">
+        </div>
+        <div>
+            <label>End Month</label>
+            <input type="month" id="endMonth" onchange="handleDateChange()" inputmode="numeric">
+        </div>
+
+        <div class="section-header">2. Financial Details</div>
+
+        <div>
+            <label>Monthly Rent (₹)</label>
+            <input type="number" id="baseRentAmount" placeholder="e.g. 15000" onchange="handleDateChange()">
+        </div>
+        <div>
+            <label>Payment Mode</label>
+            <select id="paymentMode">
+                <option value="Cash">Cash</option>
+                <option value="Online Transfer">Online / UPI / NEFT</option>
+                <option value="Cheque">Cheque</option>
+            </select>
+        </div>
+
+        <div class="full-width">
+            <button type="button" class="btn-link" onclick="toggleBreakdown()">
+                <span style="margin-right:5px">💰</span> Customize Monthly Rents
+            </button>
+            <div id="rent-breakdown-container">
+                <p style="margin-top:0; font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">
+                    <strong>Auto-fill enabled:</strong> Changing a month's rent will automatically update all subsequent months.
+                </p>
+                <div class="breakdown-grid" id="breakdown-grid"></div>
+            </div>
+        </div>
+
+        <div class="section-header">3. Landlord(s) & Property</div>
+
+        <div class="full-width">
+            <label>Rented Property Address</label>
+            <textarea id="address" rows="2" placeholder="Full address including Flat No, Building, City, Pincode"></textarea>
+        </div>
+
+        <div class="landlord-list" id="landlord-list">
+            <div class="landlord-card" id="landlord-1">
+                <div>
+                    <label>Landlord Name</label>
+                    <input type="text" class="ll-name" placeholder="Name">
+                </div>
+                <div>
+                    <label>PAN (Required if >1L)</label>
+                    <input type="text" class="ll-pan" placeholder="ABCDE1234F" style="text-transform:uppercase;">
+                </div>
+                <div>
+                    <label>Aadhar (Optional)</label>
+                    <input type="text" class="ll-aadhar" placeholder="XXXX XXXX XXXX">
+                </div>
+                <div class="signature-preview-container" id="landlord-1-preview" style="display: none;">
+                    <span class="signature-preview-label">Signature:</span>
+                    <img class="signature-preview-img" id="landlord-1-preview-img" alt="Signature preview">
+                </div>
+                <div class="card-actions">
+                    <button type="button" class="btn-action" onclick="openSignatureEditor('landlord-1')">🖊️ Add Signature</button>
+                    <button type="button" class="btn-remove" onclick="removeLandlord('landlord-1')" disabled>Remove</button>
+                </div>
+            </div>
+        </div>
+        <div class="full-width">
+             <button type="button" class="btn-link" onclick="addLandlord()">+ Add Another Landlord</button>
+        </div>
+
+        <div class="section-header">4. Receipt Type</div>
+
+        <div class="full-width">
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <label style="font-weight: 400; cursor: pointer;">
+                    <input type="radio" name="receiptType" value="separate" checked>
+                    Separate (Monthly)
+                </label>
+                <label style="font-weight: 400; cursor: pointer;">
+                    <input type="radio" name="receiptType" value="consolidated">
+                    Consolidated (Yearly)
+                </label>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="btn-container">
+        <button class="main-btn" onclick="generateReceipts()">Generate Receipts</button>
+        <button class="print-btn" id="printBtn" onclick="window.print()">🖨️ Print / PDF</button>
+    </div>
+</div>
+
+<div id="receipt-preview"></div>
+
+<script>
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            maximumFractionDigits: 0
+        }).format(amount);
+    }
+
+    function getMonthName(date) {
+        return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    }
+
+    function numToWords(n) {
+        const a = ['','One ','Two ','Three ','Four ','Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+        const b = ['', '', 'Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+        if ((n = n.toString()).length > 9) return 'overflow';
+        let n_array = ('000000000' + n).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+        if (!n_array) return;
+        let str = '';
+        str += (n_array[1] != 0) ? (a[Number(n_array[1])] || b[n_array[1][0]] + ' ' + a[n_array[1][1]]) + 'Crore ' : '';
+        str += (n_array[2] != 0) ? (a[Number(n_array[2])] || b[n_array[2][0]] + ' ' + a[n_array[2][1]]) + 'Lakh ' : '';
+        str += (n_array[3] != 0) ? (a[Number(n_array[3])] || b[n_array[3][0]] + ' ' + a[n_array[3][1]]) + 'Thousand ' : '';
+        str += (n_array[4] != 0) ? (a[Number(n_array[4])] || b[n_array[4][0]] + ' ' + a[n_array[4][1]]) + 'Hundred ' : '';
+        str += (n_array[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n_array[5])] || b[n_array[5][0]] + ' ' + a[n_array[5][1]]) : '';
+        return str + 'Only';
+    }
+
+    // --- Signature Image Editor ---
+    let signatureImage = null;
+    let signatureCanvas = null;
+    let signatureCtx = null;
+    let currentRotation = 0;
+    let currentZoom = 1;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let imageX = 0;
+    let imageY = 0;
+    let cropMode = false;
+    let cropStart = null;
+    let cropEnd = null;
+    let isDrawingCrop = false;
+    let originalImage = null;
+    let currentLandlordId = null;
+
+    if (!window.landlordSignatures) {
+        window.landlordSignatures = {};
+    }
+
+    function openSignatureEditor(landlordId) {
+        currentLandlordId = landlordId;
+        document.getElementById('signatureModal').style.display = 'block';
+        if (!signatureCanvas) {
+            signatureCanvas = document.getElementById('imageCanvas');
+            signatureCtx = signatureCanvas.getContext('2d');
+            setupCanvasEvents();
+        }
+    }
+
+    function closeSignatureEditor() {
+        document.getElementById('signatureModal').style.display = 'none';
+        cropMode = false;
+        document.getElementById('cropBtn').classList.remove('active');
+        document.getElementById('applyCropBtn').style.display = 'none';
+    }
+
+    function loadSignatureImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                originalImage = img;
+                signatureImage = img;
+                currentRotation = 0;
+                currentZoom = 1;
+                imageX = 0;
+                imageY = 0;
+                document.getElementById('zoomSlider').value = 1;
+                updateCanvas();
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function updateCanvas() {
+        if (!signatureImage) return;
+
+        const container = document.getElementById('canvasContainer');
+        const maxWidth = container.clientWidth - 40;
+        const maxHeight = 400;
+
+        let width, height;
+        if (currentRotation % 180 === 0) {
+            width = signatureImage.width;
+            height = signatureImage.height;
+        } else {
+            width = signatureImage.height;
+            height = signatureImage.width;
+        }
+
+        const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+        signatureCanvas.width = width * scale * currentZoom;
+        signatureCanvas.height = height * scale * currentZoom;
+
+        signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+        signatureCtx.save();
+        signatureCtx.translate(signatureCanvas.width / 2, signatureCanvas.height / 2);
+        signatureCtx.rotate((currentRotation * Math.PI) / 180);
+        signatureCtx.scale(currentZoom, currentZoom);
+        signatureCtx.drawImage(
+            signatureImage,
+            -signatureImage.width * scale / 2,
+            -signatureImage.height * scale / 2,
+            signatureImage.width * scale,
+            signatureImage.height * scale
+        );
+        signatureCtx.restore();
+
+        if (cropMode && cropStart && cropEnd) {
+            const x = Math.min(cropStart.x, cropEnd.x);
+            const y = Math.min(cropStart.y, cropEnd.y);
+            const width = Math.abs(cropEnd.x - cropStart.x);
+            const height = Math.abs(cropEnd.y - cropStart.y);
+
+            // Save the current state
+            signatureCtx.save();
+
+            // Create a clipping path for the overlay (everything EXCEPT the selection)
+            signatureCtx.beginPath();
+            signatureCtx.rect(0, 0, signatureCanvas.width, signatureCanvas.height);
+            signatureCtx.rect(x + width, y, -width, height); // Draw selection in reverse to create hole
+            signatureCtx.closePath();
+
+            // Fill the overlay with semi-transparent dark color (this won't fill the selection hole)
+            signatureCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            signatureCtx.fill('evenodd');
+
+            // Restore state
+            signatureCtx.restore();
+
+            // Draw bright border around the selection
+            signatureCtx.strokeStyle = '#10b981';
+            signatureCtx.lineWidth = 3;
+            signatureCtx.strokeRect(x, y, width, height);
+
+            // Draw corner markers for better visibility
+            const markerSize = 10;
+            signatureCtx.fillStyle = '#10b981';
+            // Top-left corner
+            signatureCtx.fillRect(x - 2, y - 2, markerSize, 3);
+            signatureCtx.fillRect(x - 2, y - 2, 3, markerSize);
+            // Top-right corner
+            signatureCtx.fillRect(x + width - markerSize + 2, y - 2, markerSize, 3);
+            signatureCtx.fillRect(x + width - 1, y - 2, 3, markerSize);
+            // Bottom-left corner
+            signatureCtx.fillRect(x - 2, y + height - 1, markerSize, 3);
+            signatureCtx.fillRect(x - 2, y + height - markerSize + 2, 3, markerSize);
+            // Bottom-right corner
+            signatureCtx.fillRect(x + width - markerSize + 2, y + height - 1, markerSize, 3);
+            signatureCtx.fillRect(x + width - 1, y + height - markerSize + 2, 3, markerSize);
+        }
+
+        document.getElementById('zoomValue').textContent = Math.round(currentZoom * 100) + '%';
+    }
+
+    function rotateImage(degrees) {
+        currentRotation = (currentRotation + degrees) % 360;
+        updateCanvas();
+    }
+
+    function resetRotation() {
+        currentRotation = 0;
+        updateCanvas();
+    }
+
+    function resetZoom() {
+        currentZoom = 1;
+        document.getElementById('zoomSlider').value = 1;
+        document.getElementById('zoomValue').textContent = '100%';
+        updateCanvas();
+    }
+
+    function toggleCropMode() {
+        cropMode = !cropMode;
+        const btn = document.getElementById('cropBtn');
+        const applyBtn = document.getElementById('applyCropBtn');
+        const cancelBtn = document.getElementById('cancelCropBtn');
+
+        if (cropMode) {
+            btn.classList.add('active');
+            btn.textContent = '✂️ Crop Mode Active';
+            applyBtn.style.display = 'block';
+            cancelBtn.style.display = 'block';
+            signatureCanvas.style.cursor = 'crosshair';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '✂️ Enable Crop';
+            applyBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            signatureCanvas.style.cursor = 'move';
+            cropStart = null;
+            cropEnd = null;
+            isDrawingCrop = false;
+            updateCanvas();
+        }
+    }
+
+    function cancelCrop() {
+        cropMode = false;
+        cropStart = null;
+        cropEnd = null;
+        isDrawingCrop = false;
+        const btn = document.getElementById('cropBtn');
+        const applyBtn = document.getElementById('applyCropBtn');
+        const cancelBtn = document.getElementById('cancelCropBtn');
+        btn.classList.remove('active');
+        btn.textContent = '✂️ Enable Crop';
+        applyBtn.style.display = 'none';
+        cancelBtn.style.display = 'none';
+        signatureCanvas.style.cursor = 'move';
+        updateCanvas();
+    }
+
+    function resetAll() {
+        currentRotation = 0;
+        currentZoom = 1;
+        document.getElementById('zoomSlider').value = 1;
+        document.getElementById('zoomValue').textContent = '100%';
+        if (cropMode) {
+            cancelCrop();
+        }
+        updateCanvas();
+    }
+
+    function applyCrop() {
+        if (!cropStart || !cropEnd) {
+            alert('Please select an area to crop');
+            return;
+        }
+
+        const x = Math.min(cropStart.x, cropEnd.x);
+        const y = Math.min(cropStart.y, cropEnd.y);
+        const width = Math.abs(cropEnd.x - cropStart.x);
+        const height = Math.abs(cropEnd.y - cropStart.y);
+
+        const croppedCanvas = document.createElement('canvas');
+        croppedCanvas.width = width;
+        croppedCanvas.height = height;
+        const croppedCtx = croppedCanvas.getContext('2d');
+        croppedCtx.drawImage(signatureCanvas, x, y, width, height, 0, 0, width, height);
+
+        const croppedImg = new Image();
+        croppedImg.onload = function() {
+            signatureImage = croppedImg;
+            cropStart = null;
+            cropEnd = null;
+            toggleCropMode();
+            updateCanvas();
+        };
+        croppedImg.src = croppedCanvas.toDataURL();
+    }
+
+    function setupCanvasEvents() {
+        document.getElementById('zoomSlider').addEventListener('input', function(e) {
+            currentZoom = parseFloat(e.target.value);
+            updateCanvas();
+        });
+
+        signatureCanvas.addEventListener('mousedown', function(e) {
+            if (!cropMode) return;
+            isDrawingCrop = true;
+            const rect = signatureCanvas.getBoundingClientRect();
+            cropStart = {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+            cropEnd = {...cropStart};
+        });
+
+        signatureCanvas.addEventListener('mousemove', function(e) {
+            if (!cropMode || !cropStart || !isDrawingCrop) return;
+            const rect = signatureCanvas.getBoundingClientRect();
+            cropEnd = {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+            updateCanvas();
+        });
+
+        signatureCanvas.addEventListener('mouseup', function(e) {
+            if (!cropMode) return;
+            isDrawingCrop = false;
+        });
+    }
+
+    function saveSignature() {
+        if (!signatureImage) {
+            alert('Please select and edit an image first');
+            return;
+        }
+
+        if (!currentLandlordId) {
+            alert('Landlord ID not set!');
+            return;
+        }
+
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = signatureCanvas.width;
+        finalCanvas.height = signatureCanvas.height;
+        const finalCtx = finalCanvas.getContext('2d');
+
+        finalCtx.fillStyle = 'white';
+        finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+        finalCtx.drawImage(signatureCanvas, 0, 0);
+
+        const signatureDataUrl = finalCanvas.toDataURL('image/png');
+        window.landlordSignatures[currentLandlordId] = signatureDataUrl;
+
+        const landlordCard = document.getElementById(currentLandlordId);
+        if (landlordCard) {
+            const signatureBtn = landlordCard.querySelector('.btn-action');
+            if (signatureBtn) {
+                signatureBtn.textContent = '✓ Signature Added';
+                signatureBtn.style.backgroundColor = '#10b981';
+            }
+
+            // Show signature preview
+            const previewContainer = document.getElementById(`${currentLandlordId}-preview`);
+            const previewImg = document.getElementById(`${currentLandlordId}-preview-img`);
+            if (previewContainer && previewImg) {
+                previewImg.src = signatureDataUrl;
+                previewContainer.style.display = 'flex';
+            }
+        }
+
+        closeSignatureEditor();
+    }
+
+    // --- Dynamic Rent Inputs ---
+    let isBreakdownVisible = false;
+
+    function getMonthList() {
+        const startVal = document.getElementById('startMonth').value;
+        const endVal = document.getElementById('endMonth').value;
+        if (!startVal || !endVal) return [];
+
+        let start = new Date(startVal + "-01");
+        let end = new Date(endVal + "-01");
+        let list = [];
+        while(start <= end) {
+            list.push(new Date(start));
+            start.setMonth(start.getMonth() + 1);
+        }
+        return list;
+    }
+
+    function propagateRentChange(startIndex, newValue) {
+        const inputs = document.querySelectorAll('.dynamic-rent');
+        for (let i = startIndex + 1; i < inputs.length; i++) {
+            inputs[i].value = newValue;
+        }
+    }
+
+    function handleDateChange() {
+        if (!isBreakdownVisible) return;
+        const months = getMonthList();
+        const baseRent = document.getElementById('baseRentAmount').value || 0;
+        const grid = document.getElementById('breakdown-grid');
+        grid.innerHTML = '';
+        months.forEach((date, index) => {
+            const monthStr = getMonthName(date);
+            const id = `rent-input-${index}`;
+            const div = document.createElement('div');
+            div.className = 'month-input-group';
+
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.id = id;
+            input.value = baseRent;
+            input.className = 'dynamic-rent';
+            input.dataset.month = monthStr;
+            input.oninput = function() { propagateRentChange(index, this.value); };
+
+            div.innerHTML = `<label>${monthStr}</label>`;
+            div.appendChild(input);
+            grid.appendChild(div);
+        });
+    }
+
+    function toggleBreakdown() {
+        const container = document.getElementById('rent-breakdown-container');
+        isBreakdownVisible = !isBreakdownVisible;
+        container.style.display = isBreakdownVisible ? 'block' : 'none';
+        if(isBreakdownVisible) handleDateChange();
+    }
+
+    function getRentData() {
+        const months = getMonthList();
+        const baseRent = document.getElementById('baseRentAmount').value;
+        const data = [];
+        if (isBreakdownVisible) {
+            const inputs = document.querySelectorAll('.dynamic-rent');
+            inputs.forEach((input, i) => {
+                data.push({ date: months[i], amount: input.value });
+            });
+        } else {
+            months.forEach(date => {
+                data.push({ date: date, amount: baseRent });
+            });
+        }
+        return data;
+    }
+
+    // --- Landlord Management ---
+    function addLandlord() {
+        const list = document.getElementById('landlord-list');
+        const count = list.children.length;
+        const id = `landlord-${count + 1}`;
+
+        const div = document.createElement('div');
+        div.className = 'landlord-card';
+        div.id = id;
+
+        const removeBtn = count > 0
+            ? `<button type="button" class="remove-landlord-btn" onclick="removeLandlord('${id}')">&times;</button>`
+            : '';
+
+        div.innerHTML = `
+            ${removeBtn}
+            <div>
+                <label>Landlord Name</label>
+                <input type="text" class="ll-name" placeholder="Name">
+            </div>
+            <div>
+                <label>PAN (Required if >1L)</label>
+                <input type="text" class="ll-pan" placeholder="ABCDE1234F" style="text-transform:uppercase;">
+            </div>
+            <div>
+                <label>Aadhar (Optional)</label>
+                <input type="text" class="ll-aadhar" placeholder="XXXX XXXX XXXX">
+            </div>
+            <div class="signature-preview-container" id="${id}-preview" style="display: none;">
+                <span class="signature-preview-label">Signature:</span>
+                <img class="signature-preview-img" id="${id}-preview-img" alt="Signature preview">
+            </div>
+            <div class="card-actions">
+                <button type="button" class="btn-action" onclick="openSignatureEditor('${id}')">🖊️ Add Signature</button>
+                <button type="button" class="btn-remove" onclick="removeLandlord('${id}')" ${count === 0 ? 'disabled' : ''}>Remove</button>
+            </div>
+        `;
+        list.appendChild(div);
+    }
+
+    function removeLandlord(id) {
+        const item = document.getElementById(id);
+        if(item) item.remove();
+    }
+
+    function getLandlordsData() {
+        const cards = document.querySelectorAll('.landlord-card');
+        const landlords = [];
+        cards.forEach(card => {
+            landlords.push({
+                name: card.querySelector('.ll-name').value,
+                pan: card.querySelector('.ll-pan').value,
+                aadhar: card.querySelector('.ll-aadhar').value
+            });
+        });
+        return landlords;
+    }
+
+    // --- Generation Logic ---
+    function generateReceipts() {
+        const tenant = document.getElementById('tenantName').value;
+        const address = document.getElementById('address').value;
+        const mode = document.getElementById('paymentMode').value;
+        const type = document.querySelector('input[name="receiptType"]:checked').value;
+
+        const rentData = getRentData();
+        const landlords = getLandlordsData();
+
+        // Basic Validation
+        if(!tenant || rentData.length === 0 || landlords.length === 0 || !landlords[0].name || !rentData[0].amount) {
+            alert("Please fill in all required fields.");
+            return;
+        }
+
+        let totalRent = 0;
+        rentData.forEach(item => totalRent += parseFloat(item.amount || 0));
+
+        if (totalRent > 100000) {
+            const missingPan = landlords.some(l => !l.pan.trim());
+            if (missingPan) {
+                alert(`Total rent is ₹${formatCurrency(totalRent)}, which exceeds ₹1,00,000.\n\nAll Landlords must provide a PAN.`);
+                return;
+            }
+        }
+
+        const container = document.getElementById('receipt-preview');
+        container.innerHTML = '';
+
+        if (type === 'separate') {
+            generateSeparateReceipts(container, rentData, tenant, address, landlords, mode);
+        } else {
+            generateConsolidatedReceipt(container, rentData, tenant, address, landlords, mode);
+        }
+
+        container.style.display = 'block';
+        document.getElementById('printBtn').style.display = 'inline-block';
+        container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function getLandlordDetailsHtml(landlords) {
+        let html = '';
+        landlords.forEach((l, i) => {
+            html += `<div><strong>${i+1}. ${l.name}</strong>`;
+            if (l.pan) html += ` - PAN: ${l.pan.toUpperCase()}`;
+            if (l.aadhar) html += ` - Aadhar: ${l.aadhar}`;
+            html += `</div>`;
+        });
+        return html;
+    }
+
+    function getSignatureBlockHtml(landlords, mode, amount) {
+        let showStamp = (mode === 'Cash' && amount > 5000);
+        let html = `<div class="signatures-container">`;
+
+        landlords.forEach((l, index) => {
+            const landlordId = `landlord-${index + 1}`;
+            const stampHtml = showStamp
+                ? `<div class="stamp-box">Revenue<br>Stamp</div>`
+                : `<div style="width:70px; height:70px"></div>`;
+
+            // Get signature for this specific landlord
+            const landlordSignature = window.landlordSignatures && window.landlordSignatures[landlordId];
+
+            html += `
+                <div class="signature-unit">
+                    ${stampHtml}
+                    <div class="signature-image-area">
+                        ${landlordSignature ?
+                            `<img src="${landlordSignature}" class="signature-img" alt="Signature">` :
+                            ''}
+                    </div>
+                    <div class="signature-line">Signed by: ${l.name}</div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+        return html;
+    }
+
+    function generateSeparateReceipts(container, data, tenant, address, landlords, mode) {
+        const landlordDetailsHtml = getLandlordDetailsHtml(landlords);
+
+        data.forEach((item, index) => {
+            const monthYear = getMonthName(item.date);
+            const amount = item.amount;
+            const payDate = new Date(item.date); payDate.setDate(5);
+            const signatureHtml = getSignatureBlockHtml(landlords, mode, amount);
+
+            const html = `
+            <div class="receipt monthly-item">
+                <div class="receipt-top">
+                    <div class="receipt-title">
+                        <h2>Rent Receipt</h2>
+                        <span>SEC 1 (13-A) Income Tax Act</span>
+                    </div>
+                    <div class="receipt-meta">
+                        Receipt #: <strong>${index + 1}</strong><br>
+                        Date: <strong>${payDate.toLocaleDateString('en-IN')}</strong>
+                    </div>
+                </div>
+
+                <div class="receipt-body">
+                    Received from <strong>${tenant}</strong> the sum of
+                    <strong>${formatCurrency(amount)}</strong> (Rupees <strong>${numToWords(amount)}</strong>)
+                    towards rent for the month of <strong>${monthYear}</strong>.
+
+                    <div class="property-box">
+                        Property: ${address}
+                    </div>
+
+                    Payment Mode: <strong>${mode}</strong>
+                </div>
+
+                <div class="receipt-footer">
+                    <div class="landlord-details-block">
+                        <div style="font-size:0.75rem; text-transform:uppercase; color:#94a3b8; margin-bottom:5px;">Landlords</div>
+                        ${landlordDetailsHtml}
+                    </div>
+                    ${signatureHtml}
+                </div>
+            </div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function generateConsolidatedReceipt(container, data, tenant, address, landlords, mode) {
+        let totalAmount = 0;
+        let tableRows = '';
+        const startMonth = getMonthName(data[0].date);
+        const endMonth = getMonthName(data[data.length-1].date);
+        const landlordDetailsHtml = getLandlordDetailsHtml(landlords);
+
+        data.forEach(item => {
+            const amt = parseFloat(item.amount);
+            totalAmount += amt;
+            tableRows += `
+                <tr>
+                    <td>${getMonthName(item.date)}</td>
+                    <td class="text-right">${formatCurrency(amt)}</td>
+                </tr>
+            `;
+        });
+
+        const signatureHtml = getSignatureBlockHtml(landlords, mode, totalAmount);
+
+        const html = `
+        <div class="receipt consolidated-item">
+            <div class="receipt-top">
+                <div class="receipt-title">
+                    <h2>Consolidated Receipt</h2>
+                    <span>${startMonth} &mdash; ${endMonth}</span>
+                </div>
+                <div class="receipt-meta">
+                    Date of Issue<br>
+                    <strong>${new Date().toLocaleDateString('en-IN')}</strong>
+                </div>
+            </div>
+
+            <div class="receipt-body">
+                Received from <strong>${tenant}</strong> the total sum of
+                <strong>${formatCurrency(totalAmount)}</strong> (Rupees <strong>${numToWords(totalAmount)}</strong>)
+                towards rent for the property situated at:
+
+                <div class="property-box">
+                    ${address}
+                </div>
+
+                Payment Mode: <strong>${mode}</strong>
+
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th class="text-right">Amount (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                        <tr class="total-row">
+                            <td>Total Paid</td>
+                            <td class="text-right">${formatCurrency(totalAmount)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+          </div>
+
+            <div class="receipt-footer">
+                <div class="landlord-details-block">
+                    <div style="font-size:0.75rem; text-transform:uppercase; color:#94a3b8; margin-bottom:5px;">Landlords</div>
+                    ${landlordDetailsHtml}
+                </div>
+                ${signatureHtml}
+            </div>
+        </div>`;
+
+        container.innerHTML = html;
+    }
+</script>
+
+<!-- Signature Image Editor Modal -->
+<div id="signatureModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Edit Signature Image</h3>
+            <button class="close-btn" onclick="closeSignatureEditor()">&times;</button>
+        </div>
+        <div class="editor-container">
+            <input type="file" id="signatureFileInput" accept="image/*" style="display: none;" onchange="loadSignatureImage(event)">
+            <button class="btn-editor" onclick="document.getElementById('signatureFileInput').click()" style="width: fit-content;">
+                📁 Choose Image File
+            </button>
+
+            <div class="canvas-container" id="canvasContainer">
+                <canvas id="imageCanvas"></canvas>
+            </div>
+
+            <div class="editor-controls">
+                <div class="control-group">
+                    <label>Zoom</label>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="range" id="zoomSlider" min="0.1" max="3" step="0.1" value="1" onchange="updateCanvas()" style="flex: 1;">
+                        <span id="zoomValue" style="font-size: 0.8rem; color: var(--text-muted); min-width: 45px;">100%</span>
+                        <button class="btn-editor" onclick="resetZoom()" style="padding: 4px 12px; font-size: 0.85rem;">↺ Reset</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Rotation</label>
+                    <div class="control-buttons">
+                        <button class="btn-editor" onclick="rotateImage(-90)">↶ Left</button>
+                        <button class="btn-editor" onclick="rotateImage(90)">↷ Right</button>
+                        <button class="btn-editor" onclick="resetRotation()">⟲ Reset</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Crop Mode</label>
+                    <div class="control-buttons">
+                        <button class="btn-editor" id="cropBtn" onclick="toggleCropMode()">✂️ Enable Crop</button>
+                        <button class="btn-editor" onclick="applyCrop()" id="applyCropBtn" style="display: none;">✓ Apply Crop</button>
+                        <button class="btn-editor" onclick="cancelCrop()" id="cancelCropBtn" style="display: none; background-color: #ef4444;">✖ Cancel Crop</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Reset All</label>
+                    <div class="control-buttons">
+                        <button class="btn-editor" onclick="resetAll()" style="background-color: #dc2626;">↻ Reset All Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeSignatureEditor()">Cancel</button>
+            <button class="btn-save" onclick="saveSignature()">Save Signature</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
