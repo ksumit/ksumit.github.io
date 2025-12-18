@@ -626,9 +626,252 @@
                 page-break-after: always;
             }
         }
+
+        /* FAQ Button and Modal Styles */
+        .faq-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(15, 118, 110, 0.3);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .faq-button.hidden {
+            display: none;
+        }
+
+        .faq-button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(15, 118, 110, 0.4);
+        }
+
+        .faq-icon {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .faq-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .faq-modal.active {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .faq-content {
+            background: white;
+            max-width: 900px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s;
+            margin: 0 auto;
+        }
+
+        .faq-header {
+            background: var(--primary);
+            color: white;
+            padding: 24px 30px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .faq-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .faq-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .faq-body {
+            padding: 30px;
+        }
+
+        .faq-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-left: 4px solid var(--primary);
+            border-radius: 6px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .faq-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .faq-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .faq-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-right: 12px;
+        }
+
+        .faq-text {
+            display: inline;
+            color: var(--text-main);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 700px) {
+            .faq-button {
+                top: 10px;
+                right: 10px;
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .faq-button span:nth-child(2) {
+                display: none;
+            }
+
+            .faq-content {
+                width: 95%;
+            }
+
+            .faq-header {
+                padding: 20px;
+            }
+
+            .faq-body {
+                padding: 20px;
+            }
+        }
+
+        @media print {
+            .faq-button {
+                display: none;
+            }
+            .faq-modal {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
+
+<!-- FAQ Button -->
+<button class="faq-button" onclick="toggleFAQ()">
+    <span class="faq-icon">💡</span>
+    <span>Why should I use this?</span>
+</button>
+
+<!-- FAQ Modal -->
+<div class="faq-modal" id="faqModal" onclick="closeFAQOnOutsideClick(event)">
+    <div class="faq-content" onclick="event.stopPropagation()">
+        <div class="faq-header">
+            <h2>Why Use This Generator?</h2>
+            <button class="faq-close" onclick="toggleFAQ()">&times;</button>
+        </div>
+        <div class="faq-body">
+            <ul class="faq-list">
+                <li class="faq-item">
+                    <span class="faq-number">1</span>
+                    <span class="faq-text">A <strong>single-page client-side application</strong> unlike other online generators, meaning <strong>no data ever leaves your machine</strong>.</span>
+                </li>
+                <li class="faq-item">
+                    <span class="faq-number">2</span>
+                    <span class="faq-text">Works <strong>completely offline</strong>, so you can even save this page on your machine and generate receipts anytime.</span>
+                </li>
+                <li class="faq-item">
+                    <span class="faq-number">3</span>
+                    <span class="faq-text">Supports <strong>signature image</strong> with cropping, rotating, zooming in/out etc. The image is loaded from your local machine and <strong>never leaves your machine</strong>.</span>
+                </li>
+                <li class="faq-item">
+                    <span class="faq-number">4</span>
+                    <span class="faq-text">Each printable page contains <strong>two receipts to optimize for paper usage</strong> (in case you had to print!).</span>
+                </li>
+                <li class="faq-item">
+                    <span class="faq-number">5</span>
+                    <span class="faq-text">Has <strong>basic validations</strong> for when PAN or Revenue Stamps are required with landlord signatures.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
 
 <div class="container" id="input-form">
     <h1>Rent Receipt Generator</h1>
@@ -740,6 +983,38 @@
 <div id="receipt-preview"></div>
 
 <script>
+    // FAQ Modal Functions
+    function toggleFAQ() {
+        const modal = document.getElementById('faqModal');
+        const button = document.querySelector('.faq-button');
+
+        modal.classList.toggle('active');
+
+        if (modal.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+            button.classList.add('hidden');
+        } else {
+            document.body.style.overflow = 'auto';
+            button.classList.remove('hidden');
+        }
+    }
+
+    function closeFAQOnOutsideClick(event) {
+        if (event.target.id === 'faqModal') {
+            toggleFAQ();
+        }
+    }
+
+    // Close FAQ on Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modal = document.getElementById('faqModal');
+            if (modal && modal.classList.contains('active')) {
+                toggleFAQ();
+            }
+        }
+    });
+
     function formatCurrency(amount) {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
