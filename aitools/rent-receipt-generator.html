@@ -557,6 +557,86 @@
             object-fit: contain;
         }
 
+        /* Signature Drawing Canvas Styles */
+        .signature-canvas-container {
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: white;
+            margin: 15px 0;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        #signatureDrawCanvas {
+            display: block;
+            width: 100%;
+            background: white;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .signature-mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 5px;
+            background: var(--bg-app);
+            border-radius: 8px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid var(--border);
+            background: white;
+            color: var(--text-main);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .mode-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .draw-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .pen-color-selector {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 0 2px white, 0 0 0 4px var(--primary);
+        }
+
         /* Table Styles for Consolidated */
         .modern-table {
             width: 100%;
@@ -858,14 +938,18 @@
                 </li>
                 <li class="faq-item">
                     <span class="faq-number">3</span>
-                    <span class="faq-text">Supports <strong>signature image</strong> with cropping, rotating, zooming in/out etc. The image is loaded from your local machine and <strong>never leaves your machine</strong>.</span>
+                    <span class="faq-text">Supports <strong>signing on the page</strong> itself, so you can <strong>draw your signature directly and generate PDF receipts.</strong></span>
                 </li>
                 <li class="faq-item">
                     <span class="faq-number">4</span>
-                    <span class="faq-text">Each printable page contains <strong>two receipts to optimize for paper usage</strong> (in case you had to print!).</span>
+                    <span class="faq-text">Having trouble signing on the big screen, no problem! Supports <strong>signature image</strong> with cropping, rotating, zooming in/out etc. The image is loaded from your local machine and <strong>never leaves your machine</strong>.</span>
                 </li>
                 <li class="faq-item">
                     <span class="faq-number">5</span>
+                    <span class="faq-text">Each printable page contains <strong>two receipts to optimize for paper usage</strong> (in case you had to print!).</span>
+                </li>
+                <li class="faq-item">
+                    <span class="faq-number">6</span>
                     <span class="faq-text">Has <strong>basic validations</strong> for when PAN or Revenue Stamps are required with landlord signatures.</span>
                 </li>
             </ul>
@@ -1060,6 +1144,16 @@
     let originalImage = null;
     let currentLandlordId = null;
 
+    // --- Signature Drawing Variables ---
+    let drawCanvas = null;
+    let drawCtx = null;
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let currentMode = 'upload'; // 'upload' or 'draw'
+    let penColor = '#000000';
+    let penWidth = 2;
+
     if (!window.landlordSignatures) {
         window.landlordSignatures = {};
     }
@@ -1072,6 +1166,13 @@
             signatureCtx = signatureCanvas.getContext('2d');
             setupCanvasEvents();
         }
+        if (!drawCanvas) {
+            drawCanvas = document.getElementById('signatureDrawCanvas');
+            drawCtx = drawCanvas.getContext('2d');
+            setupDrawingCanvas();
+        }
+        // Set default mode to upload
+        switchSignatureMode('upload');
     }
 
     function closeSignatureEditor() {
@@ -1314,27 +1415,215 @@
         });
     }
 
-    function saveSignature() {
-        if (!signatureImage) {
-            alert('Please select and edit an image first');
-            return;
-        }
+    // --- Signature Drawing Functions ---
+    function switchSignatureMode(mode) {
+        currentMode = mode;
+        const uploadBtn = document.getElementById('uploadModeBtn');
+        const drawBtn = document.getElementById('drawModeBtn');
+        const uploadSection = document.getElementById('uploadSection');
+        const drawSection = document.getElementById('drawSection');
 
+        if (mode === 'upload') {
+            uploadBtn.classList.add('active');
+            drawBtn.classList.remove('active');
+            uploadSection.style.display = 'block';
+            drawSection.style.display = 'none';
+        } else {
+            uploadBtn.classList.remove('active');
+            drawBtn.classList.add('active');
+            uploadSection.style.display = 'none';
+            drawSection.style.display = 'block';
+
+            // Properly size and initialize canvas when switching to draw mode
+            setTimeout(() => {
+                if (drawCanvas && drawCtx) {
+                    const container = drawCanvas.parentElement;
+                    const width = container.clientWidth;
+                    const height = 200;
+
+                    // Set canvas size
+                    drawCanvas.width = width;
+                    drawCanvas.height = height;
+
+                    // Fill with white background
+                    drawCtx.fillStyle = 'white';
+                    drawCtx.fillRect(0, 0, width, height);
+
+                    // Set drawing properties
+                    drawCtx.strokeStyle = penColor;
+                    drawCtx.lineWidth = 3; // Make it more visible
+                    drawCtx.lineCap = 'round';
+                    drawCtx.lineJoin = 'round';
+                }
+            }, 0);
+        }
+    }
+
+    function setupDrawingCanvas() {
+        const container = drawCanvas.parentElement;
+        const width = container.clientWidth || 600; // Fallback width
+        const height = 200;
+
+        // Set canvas dimensions
+        drawCanvas.width = width;
+        drawCanvas.height = height;
+
+        // Fill with white background
+        drawCtx.fillStyle = 'white';
+        drawCtx.fillRect(0, 0, width, height);
+
+        // Set drawing properties with more visible width
+        drawCtx.strokeStyle = penColor;
+        drawCtx.lineWidth = 3;
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
+
+        // Mouse events
+        drawCanvas.addEventListener('mousedown', startDrawing);
+        drawCanvas.addEventListener('mousemove', draw);
+        drawCanvas.addEventListener('mouseup', stopDrawing);
+        drawCanvas.addEventListener('mouseout', stopDrawing);
+
+        // Touch events
+        drawCanvas.addEventListener('touchstart', handleTouchStart);
+        drawCanvas.addEventListener('touchmove', handleTouchMove);
+        drawCanvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function startDrawing(e) {
+        isDrawing = true;
+        const rect = drawCanvas.getBoundingClientRect();
+        lastX = e.clientX - rect.left;
+        lastY = e.clientY - rect.top;
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+
+        const rect = drawCanvas.getBoundingClientRect();
+        const currentX = e.clientX - rect.left;
+        const currentY = e.clientY - rect.top;
+
+        // Ensure properties are set for each stroke
+        drawCtx.strokeStyle = penColor;
+        drawCtx.lineWidth = 3; // More visible
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
+
+        drawCtx.beginPath();
+        drawCtx.moveTo(lastX, lastY);
+        drawCtx.lineTo(currentX, currentY);
+        drawCtx.stroke();
+
+        lastX = currentX;
+        lastY = currentY;
+    }
+
+    function stopDrawing() {
+        isDrawing = false;
+    }
+
+    function handleTouchStart(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = drawCanvas.getBoundingClientRect();
+        isDrawing = true;
+        lastX = touch.clientX - rect.left;
+        lastY = touch.clientY - rect.top;
+    }
+
+    function handleTouchMove(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+
+        const touch = e.touches[0];
+        const rect = drawCanvas.getBoundingClientRect();
+        const currentX = touch.clientX - rect.left;
+        const currentY = touch.clientY - rect.top;
+
+        drawCtx.strokeStyle = penColor;
+        drawCtx.lineWidth = 3;
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
+
+        drawCtx.beginPath();
+        drawCtx.moveTo(lastX, lastY);
+        drawCtx.lineTo(currentX, currentY);
+        drawCtx.stroke();
+
+        lastX = currentX;
+        lastY = currentY;
+    }
+
+    function clearDrawing() {
+        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        // Refill with white background
+        drawCtx.fillStyle = 'white';
+        drawCtx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+        // Restore drawing properties
+        drawCtx.strokeStyle = penColor;
+        drawCtx.lineWidth = 3;
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
+    }
+
+    function setPenColor(color) {
+        penColor = color;
+        // Update active state
+        document.querySelectorAll('.color-option').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+
+    function setPenWidth(width) {
+        penWidth = parseInt(width);
+    }
+
+    function saveSignature() {
         if (!currentLandlordId) {
             alert('Landlord ID not set!');
             return;
         }
 
-        const finalCanvas = document.createElement('canvas');
-        finalCanvas.width = signatureCanvas.width;
-        finalCanvas.height = signatureCanvas.height;
-        const finalCtx = finalCanvas.getContext('2d');
+        let signatureDataUrl;
 
-        finalCtx.fillStyle = 'white';
-        finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-        finalCtx.drawImage(signatureCanvas, 0, 0);
+        if (currentMode === 'upload') {
+            if (!signatureImage) {
+                alert('Please select and edit an image first');
+                return;
+            }
 
-        const signatureDataUrl = finalCanvas.toDataURL('image/png');
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = signatureCanvas.width;
+            finalCanvas.height = signatureCanvas.height;
+            const finalCtx = finalCanvas.getContext('2d');
+
+            finalCtx.fillStyle = 'white';
+            finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+            finalCtx.drawImage(signatureCanvas, 0, 0);
+
+            signatureDataUrl = finalCanvas.toDataURL('image/png');
+        } else if (currentMode === 'draw') {
+            // Check if canvas is empty
+            const imageData = drawCtx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+            const pixels = imageData.data;
+            let isEmpty = true;
+            for (let i = 0; i < pixels.length; i += 4) {
+                if (pixels[i + 3] !== 0) { // Check alpha channel
+                    isEmpty = false;
+                    break;
+                }
+            }
+            if (isEmpty) {
+                alert('Please draw your signature first');
+                return;
+            }
+
+            signatureDataUrl = drawCanvas.toDataURL('image/png');
+        }
+
         window.landlordSignatures[currentLandlordId] = signatureDataUrl;
 
         const landlordCard = document.getElementById(currentLandlordId);
@@ -1695,52 +1984,94 @@
 <div id="signatureModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Edit Signature Image</h3>
+            <h3>Add Signature</h3>
             <button class="close-btn" onclick="closeSignatureEditor()">&times;</button>
         </div>
         <div class="editor-container">
-            <input type="file" id="signatureFileInput" accept="image/*" style="display: none;" onchange="loadSignatureImage(event)">
-            <button class="btn-editor" onclick="document.getElementById('signatureFileInput').click()" style="width: fit-content;">
-                📁 Choose Image File
-            </button>
-
-            <div class="canvas-container" id="canvasContainer">
-                <canvas id="imageCanvas"></canvas>
+            <!-- Mode Selector -->
+            <div class="signature-mode-selector">
+                <button class="mode-btn active" id="uploadModeBtn" onclick="switchSignatureMode('upload')">
+                    📁 Upload Image
+                </button>
+                <button class="mode-btn" id="drawModeBtn" onclick="switchSignatureMode('draw')">
+                    ✍️ Draw Signature
+                </button>
             </div>
 
-            <div class="editor-controls">
-                <div class="control-group">
-                    <label>Zoom</label>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <input type="range" id="zoomSlider" min="0.1" max="3" step="0.1" value="1" onchange="updateCanvas()" style="flex: 1;">
-                        <span id="zoomValue" style="font-size: 0.8rem; color: var(--text-muted); min-width: 45px;">100%</span>
-                        <button class="btn-editor" onclick="resetZoom()" style="padding: 4px 12px; font-size: 0.85rem;">↺ Reset</button>
+            <!-- Upload Section -->
+            <div id="uploadSection">
+                <input type="file" id="signatureFileInput" accept="image/*" style="display: none;" onchange="loadSignatureImage(event)">
+                <button class="btn-editor" onclick="document.getElementById('signatureFileInput').click()" style="width: fit-content;">
+                    📁 Choose Image File
+                </button>
+
+                <div class="canvas-container" id="canvasContainer">
+                    <canvas id="imageCanvas"></canvas>
+                </div>
+
+                <div class="editor-controls">
+                    <div class="control-group">
+                        <label>Zoom</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="range" id="zoomSlider" min="0.1" max="3" step="0.1" value="1" onchange="updateCanvas()" style="flex: 1;">
+                            <span id="zoomValue" style="font-size: 0.8rem; color: var(--text-muted); min-width: 45px;">100%</span>
+                            <button class="btn-editor" onclick="resetZoom()" style="padding: 4px 12px; font-size: 0.85rem;">↺ Reset</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Rotation</label>
+                        <div class="control-buttons">
+                            <button class="btn-editor" onclick="rotateImage(-90)">↶ Left</button>
+                            <button class="btn-editor" onclick="rotateImage(90)">↷ Right</button>
+                            <button class="btn-editor" onclick="resetRotation()">⟲ Reset</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Crop Mode</label>
+                        <div class="control-buttons">
+                            <button class="btn-editor" id="cropBtn" onclick="toggleCropMode()">✂️ Enable Crop</button>
+                            <button class="btn-editor" onclick="applyCrop()" id="applyCropBtn" style="display: none;">✓ Apply Crop</button>
+                            <button class="btn-editor" onclick="cancelCrop()" id="cancelCropBtn" style="display: none; background-color: #ef4444;">✖ Cancel Crop</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Reset All</label>
+                        <div class="control-buttons">
+                            <button class="btn-editor" onclick="resetAll()" style="background-color: #dc2626;">↻ Reset All Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Draw Section -->
+            <div id="drawSection" style="display: none;">
+                <div class="signature-canvas-container">
+                    <canvas id="signatureDrawCanvas"></canvas>
+                </div>
+
+                <div class="draw-controls">
+                    <div class="control-group">
+                        <label>Pen Color</label>
+                        <div class="pen-color-selector">
+                            <div class="color-option active" style="background: #000000;" onclick="setPenColor('#000000')"></div>
+                            <div class="color-option" style="background: #0000FF;" onclick="setPenColor('#0000FF')"></div>
+                            <div class="color-option" style="background: #FF0000;" onclick="setPenColor('#FF0000')"></div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Pen Width</label>
+                        <input type="range" min="1" max="10" value="3" onchange="setPenWidth(this.value)">
                     </div>
                 </div>
 
-                <div class="control-group">
-                    <label>Rotation</label>
-                    <div class="control-buttons">
-                        <button class="btn-editor" onclick="rotateImage(-90)">↶ Left</button>
-                        <button class="btn-editor" onclick="rotateImage(90)">↷ Right</button>
-                        <button class="btn-editor" onclick="resetRotation()">⟲ Reset</button>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label>Crop Mode</label>
-                    <div class="control-buttons">
-                        <button class="btn-editor" id="cropBtn" onclick="toggleCropMode()">✂️ Enable Crop</button>
-                        <button class="btn-editor" onclick="applyCrop()" id="applyCropBtn" style="display: none;">✓ Apply Crop</button>
-                        <button class="btn-editor" onclick="cancelCrop()" id="cancelCropBtn" style="display: none; background-color: #ef4444;">✖ Cancel Crop</button>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <label>Reset All</label>
-                    <div class="control-buttons">
-                        <button class="btn-editor" onclick="resetAll()" style="background-color: #dc2626;">↻ Reset All Changes</button>
-                    </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn-editor" onclick="clearDrawing()" style="background-color: #dc2626; color: white;">
+                        🗑️ Clear Drawing
+                    </button>
                 </div>
             </div>
         </div>
