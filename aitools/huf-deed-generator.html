@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HUF Deed Generator</title>
+    <style>
+        :root { --primary: #2c3e50; --bg: #f4f7f6; --accent: #2980b9; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; }
+
+        /* Sidebar */
+        .controls { width: 420px; background: white; padding: 20px; overflow-y: auto; border-right: 1px solid #ddd; box-shadow: 2px 0 10px rgba(0,0,0,0.1); flex-shrink: 0; }
+        h2 { color: var(--primary); font-size: 1.1rem; margin-top: 0; border-bottom: 2px solid var(--bg); padding-bottom: 8px; }
+        .group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.82rem; font-weight: bold; margin-bottom: 4px; color: #555; }
+        input, select { width: 100%; padding: 7px 9px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 0.9rem; }
+        .addr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .addr-grid .full { grid-column: 1 / -1; }
+
+        /* Member card */
+        .member-card { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px; margin-bottom: 10px; position: relative; }
+        .member-card.karta-card { border-left: 3px solid var(--accent); }
+        .member-card-title { font-size: 0.8rem; font-weight: bold; color: var(--accent); margin-bottom: 8px; }
+        .member-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .member-card-grid .full { grid-column: 1 / -1; }
+        .btn-remove { position: absolute; top: 8px; right: 8px; background: #e74c3c; color: white; border: none; border-radius: 3px; padding: 2px 7px; cursor: pointer; font-size: 0.78rem; }
+        .btn-remove:hover { background: #c0392b; }
+        .btn-add { background: var(--accent); color: white; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 0.88rem; margin-top: 4px; width: 100%; }
+        .btn-add:hover { background: #1f6fa5; }
+
+        /* Preview */
+        .preview-container { flex-grow: 1; padding: 40px; overflow-y: auto; display: flex; justify-content: center; }
+        .a4-page { width: 210mm; min-height: 297mm; background: white; padding: 15mm 20mm 20mm 20mm; box-shadow: 0 0 15px rgba(0,0,0,0.2); box-sizing: border-box; color: black; line-height: 1.6; position: relative; }
+
+        /* Stamp area */
+        .stamp-area { height: 45mm; border: 1px dashed #bbb; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 10mm; }
+
+        /* Document */
+        .doc-header { text-align: center; text-decoration: underline; font-weight: bold; font-size: 1.3rem; margin-bottom: 25px; }
+        .section { margin-bottom: 18px; text-align: justify; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.85rem; }
+        th, td { border: 1px solid black; padding: 7px 9px; text-align: left; }
+        th { background: #f0f0f0; }
+        .sig-area { margin-top: 45px; }
+        .sig-karta { text-align: right; margin-bottom: 30px; }
+        .sig-witnesses { display: flex; gap: 40px; margin-top: 10px; }
+        .sig-witness { flex: 1; }
+        .sig-line { border-top: 1px solid black; margin-top: 35px; padding-top: 5px; font-size: 0.88rem; }
+        .placeholder { color: #d32f2f; font-weight: bold; }
+
+        /* Print button */
+        .btn-print { background: #27ae60; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; margin-top: 20px; }
+        .btn-print:hover { background: #219150; }
+
+        @media print {
+            .controls { display: none; }
+            .preview-container { padding: 0; background: none; }
+            .a4-page { box-shadow: none; width: 100%; margin: 0; padding: 15mm 15mm 15mm 15mm; }
+            .stamp-area { border: none; color: transparent; }
+            body { background: white; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="controls">
+    <h2>HUF Details</h2>
+
+    <div class="group">
+        <label>Karta Name</label>
+        <input type="text" id="inKarta" placeholder="Full Name" oninput="update()">
+    </div>
+    <div class="group">
+        <label>Father's Name</label>
+        <input type="text" id="inFather" placeholder="Karta's Father" oninput="update()">
+    </div>
+
+    <div class="group">
+        <label>Address</label>
+        <div class="addr-grid">
+            <div class="full">
+                <input type="text" id="inAddrFlat" placeholder="Flat / House No., Building" oninput="update()">
+            </div>
+            <div class="full">
+                <input type="text" id="inAddrArea" placeholder="Area / Locality / Street" oninput="update()">
+            </div>
+            <input type="text" id="inAddrCity" placeholder="City" oninput="update()">
+            <input type="text" id="inAddrPin" placeholder="Pin Code" oninput="update()">
+            <div class="full">
+                <input type="text" id="inAddrState" placeholder="State" oninput="update()">
+            </div>
+        </div>
+    </div>
+
+    <div class="group">
+        <label>Date of Formation (Marriage / Deed)</label>
+        <input type="date" id="inDateForm" oninput="update()">
+    </div>
+
+    <hr>
+    <h2>Members</h2>
+    <div id="membersList"></div>
+    <button class="btn-add" onclick="addMember()">+ Add Member</button>
+
+    <hr>
+    <h2>Corpus Details</h2>
+    <div class="group">
+        <label>Initial Amount (₹)</label>
+        <input type="number" id="inAmount" placeholder="3000000" oninput="update()">
+    </div>
+    <div class="group">
+        <label>Source (e.g. Gift from Father / Ancestral Property)</label>
+        <input type="text" id="inSource" placeholder="e.g. Gift from Father" oninput="update()">
+    </div>
+
+    <hr>
+    <h2>Witnesses</h2>
+    <div class="group">
+        <label>Witness 1 – Name</label>
+        <input type="text" id="inW1Name" placeholder="Full Name" oninput="update()">
+    </div>
+    <div class="group">
+        <label>Witness 1 – Address</label>
+        <input type="text" id="inW1Addr" placeholder="Address" oninput="update()">
+    </div>
+    <div class="group">
+        <label>Witness 2 – Name</label>
+        <input type="text" id="inW2Name" placeholder="Full Name" oninput="update()">
+    </div>
+    <div class="group">
+        <label>Witness 2 – Address</label>
+        <input type="text" id="inW2Addr" placeholder="Address" oninput="update()">
+    </div>
+
+    <button class="btn-print" onclick="window.print()">🖨 Print to PDF</button>
+</div>
+
+<div class="preview-container">
+    <div class="a4-page" id="deed">
+
+        <!-- Stamp space -->
+        <div class="stamp-area">STAMP / SEAL AREA</div>
+
+        <div class="doc-header">DECLARATION OF HINDU UNDIVIDED FAMILY</div>
+
+        <div class="section">
+            I, <span id="outKarta" class="placeholder">[Karta Name]</span>, son of
+            <span id="outFather" class="placeholder">[Father's Name]</span>,
+            residing at <span id="outAddress" class="placeholder">[Full Address]</span>,
+            do hereby solemnly affirm and declare as under:
+        </div>
+
+        <div class="section">
+            1. <b>ESTABLISHMENT:</b> That I am the Karta of the Hindu Undivided Family (HUF) known as
+            <b><span id="outHUFName" class="placeholder">[Karta Name]</span> HUF</b>, which came into existence on
+            <b><span id="outDateForm" class="placeholder">[Date]</span></b>.
+        </div>
+
+        <div class="section">
+            2. <b>CONSTITUTION:</b> That the said HUF consists of the following members, including myself as the Karta:
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sl.</th>
+                        <th>Name</th>
+                        <th>Date of Birth</th>
+                        <th>Relation</th>
+                        <th>PAN</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="memberRows"></tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            3. <b>INITIAL CAPITAL:</b> That the HUF has received an initial corpus of
+            <b>₹ <span id="outAmount" class="placeholder">[Amount]</span></b>
+            by way of <span id="outSource" class="placeholder">[Source]</span>.
+            This constitutes the Nucleus of the HUF.
+        </div>
+
+        <div class="section">
+            4. <b>AUTHORITY:</b> That as the Karta, I am authorized to apply for PAN, open bank accounts,
+            and manage all movable/immovable assets on behalf of the HUF.
+        </div>
+
+        <!-- Karta signature -->
+        <div class="sig-area">
+            <div class="sig-karta">
+                <div class="sig-line" style="display:inline-block; min-width: 200px; text-align:center;">
+                    <b>(Signature of Karta)</b><br>
+                    <span id="outKartaSig" class="placeholder">[Karta Name]</span> HUF
+                </div>
+            </div>
+
+            <!-- Witnesses -->
+            <div class="sig-witnesses" id="outWitnesses"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    /* ── State ─────────────────────────────────────────────── */
+    let memberCounter = 0;
+    const memberOrder = []; // tracks card IDs in insertion order
+
+    const RELATION_OPTIONS = ['Spouse', 'Son', 'Daughter', 'Father', 'Mother', 'Brother', 'Sister', 'Other'];
+
+    function roleToStatus(rel) {
+        if (rel === 'Karta')   return 'Karta / Coparcener';
+        if (rel === 'Spouse')  return 'Member';
+        return 'Coparcener';
+    }
+
+    /* ── Member Cards ──────────────────────────────────────── */
+    function addMember(preset) {
+        const id = memberCounter++;
+        memberOrder.push(id);
+
+        const isKarta = (id === 0);
+        const p = preset || {};
+
+        const container = document.getElementById('membersList');
+        const card = document.createElement('div');
+        card.className = 'member-card' + (isKarta ? ' karta-card' : '');
+        card.id = `card${id}`;
+
+        if (isKarta) {
+            card.innerHTML = `
+                <div class="member-card-title">Member 1 — Karta</div>
+                <div class="member-card-grid">
+                    <div class="full">
+                        <label>Name</label>
+                        <input type="text" id="mName${id}" placeholder="Auto-filled from Karta Name" readonly style="background:#eef3f7;">
+                    </div>
+                    <div>
+                        <label>Date of Birth</label>
+                        <input type="date" id="mDob${id}" oninput="update()">
+                    </div>
+                    <div>
+                        <label>PAN (optional)</label>
+                        <input type="text" id="mPan${id}" placeholder="ABCDE1234F" maxlength="10" oninput="update()">
+                    </div>
+                </div>`;
+        } else {
+            const relOpts = RELATION_OPTIONS.map(r =>
+                `<option value="${r}" ${p.rel === r ? 'selected' : ''}>${r}</option>`
+            ).join('');
+            card.innerHTML = `
+                <button class="btn-remove" onclick="removeMember(${id})">✕</button>
+                <div class="member-card-title" id="cardTitle${id}">Member ${memberOrder.length}</div>
+                <div class="member-card-grid">
+                    <div class="full">
+                        <label>Full Name</label>
+                        <input type="text" id="mName${id}" placeholder="Name" oninput="update()">
+                    </div>
+                    <div>
+                        <label>Relation to Karta</label>
+                        <select id="mRel${id}" onchange="onRelChange(${id})">
+                            ${relOpts}
+                        </select>
+                    </div>
+                    <div>
+                        <label>Date of Birth</label>
+                        <input type="date" id="mDob${id}" oninput="update()">
+                    </div>
+                    <div>
+                        <label>PAN (optional)</label>
+                        <input type="text" id="mPan${id}" placeholder="ABCDE1234F" maxlength="10" oninput="update()">
+                    </div>
+                </div>`;
+        }
+
+        container.appendChild(card);
+        if (!isKarta) onRelChange(id);
+        update();
+    }
+
+    function removeMember(id) {
+        const idx = memberOrder.indexOf(id);
+        if (idx !== -1) memberOrder.splice(idx, 1);
+        const card = document.getElementById(`card${id}`);
+        if (card) card.remove();
+        reNumberCards();
+        update();
+    }
+
+    function reNumberCards() {
+        memberOrder.forEach((id, i) => {
+            const t = document.getElementById(`cardTitle${id}`);
+            if (t) t.textContent = `Member ${i + 1}`;
+        });
+    }
+
+    function onRelChange(id) {
+        enforceConstraints();
+        update();
+    }
+
+    function enforceConstraints() {
+        // Count spouses already selected
+        const spouseIds = memberOrder.filter(id => {
+            const sel = document.getElementById(`mRel${id}`);
+            return sel && sel.value === 'Spouse';
+        });
+
+        memberOrder.forEach(id => {
+            const sel = document.getElementById(`mRel${id}`);
+            if (!sel) return;
+            // Disable Spouse option if already one spouse exists and this isn't it
+            Array.from(sel.options).forEach(opt => {
+                if (opt.value === 'Spouse') {
+                    opt.disabled = spouseIds.length >= 1 && !spouseIds.includes(id);
+                }
+            });
+        });
+    }
+
+    /* ── Address helper ────────────────────────────────────── */
+    function buildAddress() {
+        const flat  = document.getElementById('inAddrFlat').value.trim();
+        const area  = document.getElementById('inAddrArea').value.trim();
+        const city  = document.getElementById('inAddrCity').value.trim();
+        const pin   = document.getElementById('inAddrPin').value.trim();
+        const state = document.getElementById('inAddrState').value.trim();
+        return [flat, area, city, pin ? pin : '', state].filter(Boolean).join(', ') || '[Full Address]';
+    }
+
+    /* ── Main update ───────────────────────────────────────── */
+    function update() {
+        const karta = document.getElementById('inKarta').value.trim() || '[Karta Name]';
+
+        // Sync karta name into member 0 field
+        const m0 = document.getElementById('mName0');
+        if (m0) m0.value = karta !== '[Karta Name]' ? karta : '';
+
+        // Document spans
+        document.getElementById('outKarta').innerText    = karta;
+        document.getElementById('outHUFName').innerText  = karta;
+        document.getElementById('outKartaSig').innerText = karta;
+        document.getElementById('outFather').innerText   = document.getElementById('inFather').value.trim() || "[Father's Name]";
+        document.getElementById('outAddress').innerText  = buildAddress();
+
+        const rawDate = document.getElementById('inDateForm').value;
+        document.getElementById('outDateForm').innerText = rawDate
+            ? new Date(rawDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+            : '[Date]';
+
+        const amt = document.getElementById('inAmount').value;
+        document.getElementById('outAmount').innerText = amt
+            ? Number(amt).toLocaleString('en-IN')
+            : '[Amount]';
+        document.getElementById('outSource').innerText = document.getElementById('inSource').value.trim() || '[Source]';
+
+        // Member table rows
+        let rows = '';
+        memberOrder.forEach((id, i) => {
+            const isKarta = (id === 0);
+            const name = (document.getElementById(`mName${id}`)?.value.trim()) || '__________';
+            const dob  = document.getElementById(`mDob${id}`)?.value || '';
+            const dobFmt = dob
+                ? new Date(dob).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+                : '__________';
+            const rel    = isKarta ? 'Self (Karta)' : (document.getElementById(`mRel${id}`)?.value || 'Other');
+            const pan    = document.getElementById(`mPan${id}`)?.value.trim() || '—';
+            const status = isKarta ? 'Karta / Coparcener' : roleToStatus(rel);
+            rows += `<tr>
+                <td>${i + 1}</td>
+                <td>${name}</td>
+                <td>${dobFmt}</td>
+                <td>${rel}</td>
+                <td>${pan}</td>
+                <td>${status}</td>
+            </tr>`;
+        });
+        document.getElementById('memberRows').innerHTML = rows;
+
+        // Witnesses
+        const w1n = document.getElementById('inW1Name').value.trim();
+        const w1a = document.getElementById('inW1Addr').value.trim();
+        const w2n = document.getElementById('inW2Name').value.trim();
+        const w2a = document.getElementById('inW2Addr').value.trim();
+
+        let wHtml = '';
+        if (w1n || w1a || w2n || w2a) {
+            if (w1n || w1a) {
+                wHtml += `<div class="sig-witness">
+                    <div class="sig-line">
+                        <b>Witness 1</b><br>
+                        Name: ${w1n || '______________________'}<br>
+                        Address: ${w1a || '______________________'}
+                    </div>
+                </div>`;
+            }
+            if (w2n || w2a) {
+                wHtml += `<div class="sig-witness">
+                    <div class="sig-line">
+                        <b>Witness 2</b><br>
+                        Name: ${w2n || '______________________'}<br>
+                        Address: ${w2a || '______________________'}
+                    </div>
+                </div>`;
+            }
+        } else {
+            // Default blank witness blocks
+            wHtml = `
+                <div class="sig-witness">
+                    <div class="sig-line"><b>Witness 1</b><br>Name: ______________________<br>Signature: ______________________</div>
+                </div>
+                <div class="sig-witness">
+                    <div class="sig-line"><b>Witness 2</b><br>Name: ______________________<br>Signature: ______________________</div>
+                </div>`;
+        }
+        document.getElementById('outWitnesses').innerHTML = wHtml;
+
+        // Placeholder colouring
+        document.querySelectorAll('.placeholder').forEach(el => {
+            const txt = el.innerText;
+            el.style.color = (txt.includes('[') || txt.includes('_')) ? '#d32f2f' : 'black';
+        });
+    }
+
+    /* ── Init ──────────────────────────────────────────────── */
+    window.onload = function () {
+        addMember(); // Karta (id=0, locked)
+        addMember({ rel: 'Spouse' });
+        addMember({ rel: 'Son' });
+        update();
+    };
+</script>
+
+</body>
+</html>
